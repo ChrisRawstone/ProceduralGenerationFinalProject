@@ -9,43 +9,48 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+renderer.setClearColor(new THREE.Color(0x87CEEB));
 // Add orbit controls to the camera.
 var controls = new OrbitControls(camera, renderer.domElement);
 
-// Set the camera position.
-camera.position.z = 50;
+// Set the camera position to (50, 50, 50).
+camera.position.set(50, 50, 50);
 
-// Create a basic material for the cubes.
+// Make the camera look at the origin (0, 0, 0).
+camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+
 class Building {
-    constructor(x, y, z) {
+    constructor(x, y, z, scale) {
         this.x = x;
         this.y = y;
         this.z = z;
+        this.scale = scale;  // Number of cubes along one side of the building
         this.material = new THREE.MeshNormalMaterial();
         this.outlineMaterial = new THREE.MeshBasicMaterial({ color: 0x0000FF, side: THREE.BackSide });
         this.init();
     }
 
     init() {
-        var yOffset = 0;
         var generating = true;
+        const size = 5;  // Size of each cube
         while (generating) {
-            const width = 5;
-            const height = 5;
-            const depth = 5;
-            const geometry = new THREE.BoxGeometry(width, height, depth);
-            const buildingblock = new THREE.Mesh(geometry, this.material);
-            const outlineGeometry = new THREE.BoxGeometry(width * 1.1, height * 1.1, depth * 1.1);
-            const outlineMesh = new THREE.Mesh(outlineGeometry, this.outlineMaterial);
+            for (let i = 0; i < this.scale; i++) {
+                for (let j = 0; j < this.scale; j++) {
+                    const geometry = new THREE.BoxGeometry(size, size, size);
+                    const buildingBlock = new THREE.Mesh(geometry, this.material);
+                    const outlineGeometry = new THREE.BoxGeometry(size * 1.1, size * 1.1, size * 1.1);
+                    const outlineMesh = new THREE.Mesh(outlineGeometry, this.outlineMaterial);
 
-            buildingblock.position.set(this.x, this.y + yOffset, this.z);
-            outlineMesh.position.set(this.x, this.y + yOffset, this.z);
+                    buildingBlock.position.set(this.x + i * size, this.y, this.z + j * size);
+                    outlineMesh.position.set(this.x + i * size, this.y, this.z + j * size);
 
-            scene.add(buildingblock);
-            scene.add(outlineMesh);
-
-            yOffset += height;
-            generating = Math.random() > 0.1;
+                    scene.add(buildingBlock);
+                    scene.add(outlineMesh);
+                }
+            }
+            this.y += size;  // Increase y for the next layer of cubes
+            generating = Math.random() > 0.1;  // Randomly decide if another layer should be added
         }
     }
 }
@@ -55,10 +60,17 @@ function getRandomCoord() {
     return Math.floor(Math.random() * 100 - 50);  // Range from -50 to 50
 }
 
-// Generate multiple buildings
-for (let i = 0; i < 10; i++) {
-    new Building(getRandomCoord(), 0, getRandomCoord());
+// Generate multiple buildings with increasing scale factors
+// Adjust probability of building generation based on the scale
+for (let i = 0; i < 10; i++) {  // Increased loop count for demonstration
+    let scale = i + 1;
+    // Decreasing probability of generating a building with a larger base layer
+    if (Math.random() < Math.exp(-0.01 * scale)) {
+        new Building(getRandomCoord(), 0, getRandomCoord(), scale);
+    }
 }
+
+
 
 // Render loop
 function animate() {
