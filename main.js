@@ -13,7 +13,7 @@ renderer.setClearColor(new THREE.Color(0x87CEEB));
 const controls = new OrbitControls(camera, renderer.domElement);
 
 // Set the camera position to (50, 50, 50).
-camera.position.set(0, 50, 100);
+camera.position.set(0, 50, -100);
 
 // Make the camera look at the origin (0, 0, 0).
 camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -24,23 +24,30 @@ const grid = [];
 for (let i = 0; i < gridSize; i++) {
     grid[i] = [];
     for (let j = 0; j < gridSize; j++) {
-        grid[i][j] = { filled: Math.random() > 0.9 }; // Adjust the probability as needed.
+        grid[i][j] = { filled: 1 }; // Adjust the probability as needed.
     }
 }
+
+
 
 
 // Create a plane geometry for each filled grid cell and add it to the scene.
 const cellSize = 1;
 const cellGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
+var color;
 for (let i = 0; i < gridSize; i++) {
     for (let j = 0; j < gridSize; j++) {
-        if (grid[i][j].filled) {
-            const color = new THREE.Color(Math.random(), Math.random(), Math.random());
-            const material = new THREE.MeshBasicMaterial({ color });
-            const cell = new THREE.Mesh(cellGeometry, material);
-            cell.position.set(i - gridSize / 2, j - gridSize / 2, 0); // Position the cell in the grid.
-            scene.add(cell);
-        }
+        if (grid[i][j].filled === 1) {
+             color = new THREE.Color(1, 1, 1);
+        } 
+        else if (grid[i][j].filled === 0) {
+             color = new THREE.Color(0, 0, 0);
+        } 
+        const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide }); // Enable visibility from both sides
+        const cell = new THREE.Mesh(cellGeometry, material);
+        cell.position.set(i - gridSize / 2, j - gridSize / 2, 0); // Position the cell in the grid.
+        scene.add(cell);
+        
     }
 }
 
