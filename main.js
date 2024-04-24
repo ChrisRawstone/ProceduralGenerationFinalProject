@@ -16,40 +16,54 @@ var controls = new OrbitControls(camera, renderer.domElement);
 camera.position.z = 50;
 
 // Create a basic material for the cubes.
-const material = new THREE.MeshNormalMaterial();
-const outlineMaterial = new THREE.MeshBasicMaterial({ color: 0x0000FF, side: THREE.BackSide }); // Blue color, render on the back side
+class Building {
+    constructor(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.material = new THREE.MeshNormalMaterial();
+        this.outlineMaterial = new THREE.MeshBasicMaterial({ color: 0x0000FF, side: THREE.BackSide });
+        this.init();
+    }
 
-// Dimensions for the cubes
-var width = 5;
-var height = 5;
-var depth = 5;
-var yOffset = 0; // Initial y-position offset 
+    init() {
+        var yOffset = 0;
+        var generating = true;
+        while (generating) {
+            const width = 5;
+            const height = 5;
+            const depth = 5;
+            const geometry = new THREE.BoxGeometry(width, height, depth);
+            const buildingblock = new THREE.Mesh(geometry, this.material);
+            const outlineGeometry = new THREE.BoxGeometry(width * 1.1, height * 1.1, depth * 1.1);
+            const outlineMesh = new THREE.Mesh(outlineGeometry, this.outlineMaterial);
 
-var generating = true;
-while (generating) {
-  const geometry = new THREE.BoxGeometry(width, height, depth);
-  const buildingblock = new THREE.Mesh(geometry, material);
+            buildingblock.position.set(this.x, this.y + yOffset, this.z);
+            outlineMesh.position.set(this.x, this.y + yOffset, this.z);
 
-  const outlineGeometry = new THREE.BoxGeometry(width * 1.1, height * 1.1, depth * 1.1); // Slightly larger
-  const outlineMesh = new THREE.Mesh(outlineGeometry, outlineMaterial);
+            scene.add(buildingblock);
+            scene.add(outlineMesh);
 
-  // Positioning cubes
-  buildingblock.position.set(0, yOffset, 0);
-  outlineMesh.position.set(0, yOffset, 0);
+            yOffset += height;
+            generating = Math.random() > 0.1;
+        }
+    }
+}
 
-  scene.add(buildingblock);
-  scene.add(outlineMesh);
+// Function to generate random coordinates
+function getRandomCoord() {
+    return Math.floor(Math.random() * 100 - 50);  // Range from -50 to 50
+}
 
-  yOffset += height; // Move the next cube up by the height of one cube
-
-  // Random chance to continue generating
-  generating = Math.random() > 0.1; // 90% chance to add another cube, adjust this value to change probability
+// Generate multiple buildings
+for (let i = 0; i < 10; i++) {
+    new Building(getRandomCoord(), 0, getRandomCoord());
 }
 
 // Render loop
 function animate() {
     requestAnimationFrame(animate);
-    controls.update(); // for camera control
+    controls.update();
     renderer.render(scene, camera);
 }
 animate();
