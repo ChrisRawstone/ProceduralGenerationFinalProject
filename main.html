@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Three.js Object Transformation</title>
+        <style>
+            body { margin: 0; }
+            canvas { display: block; }
+        </style>
+    </head>
+    <body>
+      <script type="importmap">
+        {
+          "imports": {
+            "three": "./build/three.module.js"
+          }
+        }
+      </script>
+      <script type="module">
+
+      import * as THREE from 'three';
+      import { OrbitControls } from './build/controls/OrbitControls.js';
+
+      // Set up the scene, camera, and renderer.
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Add orbit controls to the camera.
+      var controls = new OrbitControls( camera, renderer.domElement );
+
+      // Set the camera position.
+      camera.position.z = 50;
+
+      // Create a basic material for the skyscrapers.
+      const material = new THREE.MeshNormalMaterial();
+      const outlineMaterial = new THREE.MeshBasicMaterial({ color: 0x0000FF, side: THREE.BackSide }); // Blue color, render on the back side
+
+      var width = 5;
+      var height = 5;
+      var depth = 5;
+      
+      var generating = true;
+      while (generating) {
+        // Generate multiple skyscrapers.
+        const geometry = new THREE.BoxGeometry(width, height, depth);
+        const buildingblock = new THREE.Mesh(geometry, material);
+
+        // Generate the outline block, slightly larger than the original.
+        const outlineGeometry = new THREE.BoxGeometry(width * 1.1, height * 1.1, depth * 1.1); // Slightly larger
+        const outlineMesh = new THREE.Mesh(outlineGeometry, outlineMaterial);
+
+        var building_x_pos = 0;
+        var building_y_pos = 0;
+        var building_z_pos = 0;
+        buildingblock.position.set(building_x_pos, building_y_pos, building_z_pos);
+        outlineMesh.position.set(building_x_pos, building_y_pos, building_z_pos);
+        
+        scene.add(buildingblock);
+        scene.add(outlineMesh);
+
+        if (Math.random()>0.1) {
+          const new_buildingblock = new THREE.Mesh(geometry, material);
+          const new_outlineMesh = new THREE.Mesh(outlineGeometry, outlineMaterial);
+          
+          new_buildingblock.position.y = building_y_pos + 5; // Increased the y-position
+          new_outlineMesh.position.y = building_y_pos + 5; // Ensure the outline matches the buildingblock
+
+          scene.add(new_buildingblock);
+          scene.add(new_outlineMesh);
+        }
+
+        generating = false;
+      }
+
+      // Render loop
+      function animate() {
+          requestAnimationFrame(animate);
+          controls.update();
+          renderer.render(scene, camera);
+      }
+      animate();
+
+      </script>
+    </body>
+</html>
