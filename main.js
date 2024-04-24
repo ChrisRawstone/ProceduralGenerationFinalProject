@@ -35,24 +35,48 @@ scene.add(ground);
 // Add ambient light
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
+class Building {
+    constructor(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.material = new THREE.MeshNormalMaterial();
+        this.outlineMaterial = new THREE.MeshBasicMaterial({ color: 0x0000FF, side: THREE.BackSide });
+        this.init();
+    }
 
-var generating = true;
-while (generating) {
-  const geometry = new THREE.BoxGeometry(width, height, depth);
-  const buildingblock = new THREE.Mesh(geometry, material);
+    init() {
+        var yOffset = 0;
+        var generating = true;
+        while (generating) {
+            const width = 5;
+            const height = 5;
+            const depth = 5;
+            const geometry = new THREE.BoxGeometry(width, height, depth);
+            const buildingblock = new THREE.Mesh(geometry, this.material);
+            const outlineGeometry = new THREE.BoxGeometry(width * 1.1, height * 1.1, depth * 1.1);
+            const outlineMesh = new THREE.Mesh(outlineGeometry, this.outlineMaterial);
 
-  const outlineGeometry = new THREE.BoxGeometry(width * 1.1, height * 1.1, depth * 1.1);
-  const outlineMesh = new THREE.Mesh(outlineGeometry, outlineMaterial);
+            buildingblock.position.set(this.x, this.y + yOffset, this.z);
+            outlineMesh.position.set(this.x, this.y + yOffset, this.z);
 
-  buildingblock.position.set(0, yOffset, 0);
-  outlineMesh.position.set(0, yOffset, 0);
+            scene.add(buildingblock);
+            scene.add(outlineMesh);
 
-  scene.add(buildingblock);
-  scene.add(outlineMesh);
+            yOffset += height;
+            generating = Math.random() > 0.1;
+        }
+    }
+}
 
-  yOffset += height;
+// Function to generate random coordinates
+function getRandomCoord() {
+    return Math.floor(Math.random() * 100 - 50);  // Range from -50 to 50
+}
 
-  generating = Math.random() > 0.1;
+// Generate multiple buildings
+for (let i = 0; i < 10; i++) {
+    new Building(getRandomCoord(), 0, getRandomCoord());
 }
 
 // Instantiate the GLTFLoader
