@@ -20,60 +20,54 @@ camera.position.set(50, 50, 50);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
 
-class Building {
-    constructor(x, y, z, scale) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.scale = scale;  // Number of cubes along one side of the building
-        this.material = new THREE.MeshNormalMaterial();
-        this.outlineMaterial = new THREE.MeshBasicMaterial({ color: 0x0000FF, side: THREE.BackSide });
-        this.init();
+// Parameters
+const gridSize = 100;
+const grid = Array.from({ length: gridSize }, () => new Array(gridSize).fill(false));
+
+// Road generation function
+function generateRoad(x, y, fromDirection) {
+    if (x < 0 || x >= gridSize || y < 0 || y >= gridSize || grid[y][x]) return; // Bounds and overlap check
+
+    grid[y][x] = true; // Mark the grid cell as having a road
+
+    // Create road segment in Three.js
+    const roadGeometry = new THREE.BoxGeometry(1, 0.1, 1);
+    const roadMaterial = new THREE.MeshBasicMaterial({ color: 0x686868 });
+    const roadSegment = new THREE.Mesh(roadGeometry, roadMaterial);
+    roadSegment.position.set(x - gridSize / 2, 0, y - gridSize / 2);
+    scene.add(roadSegment);
+
+    // Randomly decide to end the road or continue branching
+    const continueStraight = Math.random() < 0.9;
+    const branchCross = Math.random() < 0.1; // Probability to branch a crossroad
+    const branchT = Math.random() < 0.1; // Probability to branch a T-road
+
+    if (continueStraight) {
+        // Continue in the same direction
+        if (fromDirection === 'north') generateRoad(x, y - 1, 'north');
+        else if (fromDirection === 'south') generateRoad(x, y + 1, 'south');
+        else if (fromDirection === 'east') generateRoad(x + 1, y, 'east');
+        else if (fromDirection === 'west') generateRoad(x - 1, y, 'west');
     }
 
-    init() {
-        var generating = true;
-        const size = 5;  // Size of each cube
-        while (generating) {
-            for (let i = 0; i < this.scale; i++) {
-                for (let j = 0; j < this.scale; j++) {
-                    const geometry = new THREE.BoxGeometry(size, size, size);
-                    const buildingBlock = new THREE.Mesh(geometry, this.material);
-                    const outlineGeometry = new THREE.BoxGeometry(size * 1.1, size * 1.1, size * 1.1);
-                    const outlineMesh = new THREE.Mesh(outlineGeometry, this.outlineMaterial);
-
-                    buildingBlock.position.set(this.x + i * size, this.y, this.z + j * size);
-                    outlineMesh.position.set(this.x + i * size, this.y, this.z + j * size);
-
-                    scene.add(buildingBlock);
-                    scene.add(outlineMesh);
-                }
-            }
-            this.y += size;  // Increase y for the next layer of cubes
-            generating = Math.random() > 0.1;  // Randomly decide if another layer should be added
+    if (branchCross || branchT) {
+        // Create crossroads or T-roads
+        if (!branchT || branchCross) {
+            generateRoad(x, y - 1, 'north');
+            generateRoad(x, y + 1, 'south');
         }
+        generateRoad(x + 1, y, 'east');
+        generateRoad(x - 1, y, 'west');
     }
 }
 
-// Function to generate random coordinates
-function getRandomCoord() {
-    return Math.floor(Math.random() * 100 - 50);  // Range from -50 to 50
-}
-
-// Generate multiple buildings with increasing scale factors
-// Adjust probability of building generation based on the scale
-for (let i = 0; i < 10; i++) {  // Increased loop count for demonstration
-    let scale = i + 1;
-    // Decreasing probability of generating a building with a larger base layer
-    if (Math.random() < Math.exp(-0.01 * scale)) {
-        new Building(getRandomCoord(), 0, getRandomCoord(), scale);
-    }
-}
+// Start road generation from the center of the grid
+generateRoad(Math.floor(gridSize / 2), Math.floor(gridSize / 2), 'north');
 
 // Render loop
 function animate() {
     requestAnimationFrame(animate);
-    controls.update(); 
     renderer.render(scene, camera);
+    controls.update();
 }
 animate();
