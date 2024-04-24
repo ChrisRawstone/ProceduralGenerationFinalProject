@@ -1,8 +1,25 @@
 {
-  "hash": "910cb5f4",
-  "configHash": "da766aaa",
-  "lockfileHash": "e3b0c442",
-  "browserHash": "079ecd6e",
-  "optimized": {},
-  "chunks": {}
+  "hash": "157e8360",
+  "configHash": "21cfd0e7",
+  "lockfileHash": "0a54edb6",
+  "browserHash": "37a82a07",
+  "optimized": {
+    "three": {
+      "src": "../../node_modules/three/build/three.module.js",
+      "file": "three.js",
+      "fileHash": "1b914d16",
+      "needsInterop": false
+    },
+    "three/addons/loaders/GLTFLoader.js": {
+      "src": "../../node_modules/three/examples/jsm/loaders/GLTFLoader.js",
+      "file": "three_addons_loaders_GLTFLoader__js.js",
+      "fileHash": "59bda0c1",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-HG536CDK": {
+      "file": "chunk-HG536CDK.js"
+    }
+  }
 }
