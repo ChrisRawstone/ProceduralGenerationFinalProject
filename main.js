@@ -61,6 +61,46 @@ function generateRoad(x, y, fromDirection) {
     }
 }
 
+// Filter out roads with adjacent roads
+// Filter out roads with adjacent roads
+function filterRoads() {
+    for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+            if (grid[y][x]) { // If current cell has a road
+                // Check adjacent cells for existing roads
+                const neighbors = [
+                    { dx: 0, dy: -1 }, // North
+                    { dx: 0, dy: 1 },  // South
+                    { dx: -1, dy: 0 }, // West
+                    { dx: 1, dy: 0 }   // East
+                ];
+
+                // Flag to track if any adjacent cell contains a road
+                let hasAdjacentRoad = false;
+
+                for (const neighbor of neighbors) {
+                    const nx = x + neighbor.dx;
+                    const ny = y + neighbor.dy;
+                    if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && grid[ny][nx]) {
+                        hasAdjacentRoad = true;
+                        break; // No need to check other neighbors
+                    }
+                }
+
+                // If any adjacent cell contains a road, remove the road from the current cell
+                if (hasAdjacentRoad) {
+                    grid[y][x] = false;
+                }
+            }
+        }
+    }
+}
+
+// Filter roads
+filterRoads();
+
+
+
 // Start road generation from the center of the grid
 generateRoad(Math.floor(gridSize / 2), Math.floor(gridSize / 2), 'north');
 
