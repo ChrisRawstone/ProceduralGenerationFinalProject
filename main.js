@@ -3,7 +3,7 @@ import { OrbitControls } from './build/controls/OrbitControls.js';
 
 // Set up the scene, camera, and renderer
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(10, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(20, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -14,7 +14,7 @@ camera.position.set(0, 50, 100);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
 // Grid setup
-const gridSize = 20;
+const gridSize = 40;
 const grid = [];
 for (let i = 0; i < gridSize; i++) {
     grid[i] = new Array(gridSize).fill(0);
@@ -87,8 +87,10 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-let x = Math.floor(gridSize / 2);
-let y = Math.floor(gridSize / 2);
+
+
+var x = 0;
+var y = Math.floor(gridSize / 2);
 
 var x_prev = x;
 var y_prev = y;
@@ -97,66 +99,145 @@ var y_prev = y;
 console.log(x, y);
 
 // initial start
-for (let j = 0; j < 5; j++) { 
+for (let j = 0; j < grid.length; j++) { 
     if (x >= gridSize) break;
     grid[y][x] = 1; 
     x++; 
 
-} // should not be touched
-
-
-
+} // s
 console.log(x, y);
-// vertical line
-var random_value = getRandomInt(x_prev+2,x)-x;
-x += random_value; // Random move up or down
-x = Math.max(0, Math.min(x, gridSize - 1)); 
-console.log(x, y);
-console.log(random_value);
 
-for (let j = 0; j < 5; j++) { 
-    if (y >= gridSize) break;
-    grid[y][x] = 1; 
-    y++; 
+var line_segment_size = 10;
+
+function recursive_draw_lines(x, y, x_prev, y_prev,depth) {
+    draw_vertical_line(x, y, x_prev, y_prev,depth,0);
+    draw_vertical_line(x, y, x_prev, y_prev,depth,1);
+
 }
-var x_prev = x;
-
-// horizontal line
-var random_value = getRandomInt(y_prev+2,y)-y;
-y += random_value; // Random move up or down
-y = Math.max(0, Math.min(y, gridSize - 1));
-
-for (let j = 0; j < 5; j++) { 
-    if (x >= gridSize) break;
-    grid[y][x] = 1; 
-    x++; 
-}
-var y_prev = y;
+recursive_draw_lines(x, y, x_prev, y_prev,4);
 
 
-var random_value = getRandomInt(x_prev+2,x)-x;
-x += random_value; // Random move up or down
-x = Math.max(0, Math.min(x, gridSize - 1)); 
-console.log(x, y);
-console.log(random_value);
 
-for (let j = 0; j < 5; j++) { 
-    if (y >= gridSize) break;
-    grid[y][x] = 1; 
-    y++; 
-}
-var x_prev = x;
 
-var random_value = getRandomInt(y_prev+2,y)-y;
-y += random_value; // Random move up or down
-y = Math.max(0, Math.min(y, gridSize - 1));
+function draw_vertical_line(x, y, x_prev, y_prev,depth, direction = 0) {
+        if (depth === 0) return;
 
-for (let j = 0; j < 5; j++) { 
-    if (x >= gridSize) break;
-    grid[y][x] = 1; 
-    x++; 
-}
-var y_prev = y;
+        // console.log("vertical line called")
+        // console.log("x_prev",x_prev, "x", x);
+        // console.log("y_prev",y_prev, "y", y);
+        
+
+        if (x_prev > x)
+        x = getRandomInt(x_prev-2,x+2);
+        else
+        x = getRandomInt(x_prev+2,x-2);
+
+        x = Math.max(0, Math.min(x, gridSize - 1)); 
+        x_prev = x;
+        // y_prev = y;
+        // console.log("x_prev",x_prev, "x", x);
+
+        for (let j = 1; j < line_segment_size; j++) { 
+
+            
+            // checks if we are inside grid
+            if (y >= gridSize || y < 0) break;
+            grid[y][x] = 1;
+            // places a road
+            if (direction === 0) { 
+                
+                y--;
+            } 
+            else {
+                y++;
+            } 
+
+            // stops it from generating over other roads
+            if (!(y >= gridSize || y < 0) && (grid[y][x]==1)) return; 
+
+        }
+        // console.log("x",x, "y", y);
+        
+
+        
+
+
+        // console.log(x, y);
+        
+
+        draw_horizontal_line(x, y, x_prev, y_prev,depth-1,direction=0);
+        draw_horizontal_line(x, y, x_prev, y_prev,depth-1,direction=1);
+    }
+var temp_bool = false;
+function draw_horizontal_line(x, y, x_prev, y_prev, depth, direction = 0) {
+        if (depth === 0) return;
+
+        // console.log("horisontal line called")
+        // console.log("x_prev",x_prev, "x", x);
+        // console.log("y_prev",y_prev, "y", y);
+
+        if (y_prev > y)
+            y = getRandomInt(y_prev-2,y+2);
+        else
+            y = getRandomInt(y_prev+2,y-2);
+        
+        y = Math.max(0, Math.min(y, gridSize - 1));
+        y_prev = y;
+
+
+
+
+
+        for (let j = 1; j < line_segment_size; j++) { 
+
+
+            // checks if we are inside grid
+            if (x >= gridSize || x <= 0) break;
+            // places a road
+            grid[y][x] = 1;
+            if (direction == 0) x--; 
+            else x++;
+
+            // stops it from generating over other roads
+            if (!(x >= gridSize || x <= 0) && grid[y][x]==1) return;
+
+            
+            
+        }
+
+        
+        draw_vertical_line(x, y, x_prev, y_prev,depth-1,direction=0);
+        draw_vertical_line(x, y, x_prev, y_prev,depth-1,direction=1);
+        // console.log(x, y);
+
+    }
+
+
+// recursive_draw_lines(x, y, x_prev, y_prev)
+
+// var random_value = getRandomInt(x_prev+2,x)-x;
+// x += random_value; // Random move up or down
+// x = Math.max(0, Math.min(x, gridSize - 1)); 
+// console.log(x, y);
+// console.log(random_value);
+
+// for (let j = 0; j < 5; j++) { 
+//     if (y >= gridSize) break;
+//     grid[y][x] = 1; 
+//     y++; 
+// }
+// var x_prev = x;
+
+// var random_value = getRandomInt(y_prev+2,y)-y;
+// y += random_value; // Random move up or down
+// y = Math.max(0, Math.min(y, gridSize - 1));
+
+// for (let j = 0; j < 5; j++) { 
+//     if (x >= gridSize) break;
+//     grid[y][x] = 1; 
+//     x++; 
+// }
+// var y_prev = y;
 
 
 
@@ -168,14 +249,14 @@ scene.add(axesHelper);
 // console.log(x, y);
 
 
-for (let i = 0; i < gridSize; i++) {
+// for (let i = 0; i < gridSize; i++) {
 
-    var temp_array = "";
-    for (let j = 0; j < gridSize; j++) {
-        temp_array += grid[i][j];
-    }
-    console.log(temp_array);
-}
+//     var temp_array = "";
+//     for (let j = 0; j < gridSize; j++) {
+//         temp_array += grid[i][j];
+//     }
+//     console.log(temp_array);
+// }
 
 
 // Create canvas based on grid
