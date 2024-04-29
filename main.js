@@ -13,14 +13,9 @@ const controls = new OrbitControls(camera, renderer.domElement);
 camera.position.set(0, 50, 100);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-// Grid setup
+var line_segment_size = 15;
 const gridSize = 80;
-const grid = [];
-for (let i = 0; i < gridSize; i++) {
-    grid[i] = new Array(gridSize).fill(0);
-}
-
-
+var iterations_of_Lsystem = 15;
 
 function getRandomInt(min, max) {
     min = Math.ceil(min);
@@ -28,6 +23,14 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+
+// Grid setup
+
+
+const grid = [];
+for (let i = 0; i < gridSize; i++) {
+    grid[i] = new Array(gridSize).fill(0);
+}
 
 
 var x = 0;
@@ -37,25 +40,23 @@ var x_prev = x;
 var y_prev = y;
 
 
-console.log(x, y);
-
 // initial start
 for (let j = 0; j < grid.length; j++) { 
     if (x >= gridSize) break;
     grid[y][x] = 1; 
     x++; 
 
-} // s
-console.log(x, y);
+} 
 
-var line_segment_size = 15;
+
+
 
 function recursive_draw_lines(x, y, x_prev, y_prev,depth) {
-    draw_vertical_line(x, y, x_prev, y_prev,depth,0);
-    draw_vertical_line(x, y, x_prev, y_prev,depth,1);
+    draw_vertical_line(x, y, x_prev, y_prev,depth,0); //  0 means making a line upwards
+    draw_vertical_line(x, y, x_prev, y_prev,depth,1); // 1 means making a line downwards
 
 }
-recursive_draw_lines(x, y, x_prev, y_prev,15);
+recursive_draw_lines(x, y, x_prev, y_prev, iterations_of_Lsystem);
 
 
 
@@ -156,6 +157,14 @@ function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0) {
     }
 
 
+// Calculate the percentage of 1s
+const countOfOnes = grid.flat().filter(value => value === 1).length;
+const totalCells = gridSize * gridSize;
+const percentageOfOnes = (countOfOnes / totalCells) * 100;
+
+// Print the result
+console.log(`Percentage of fields with 1: ${percentageOfOnes.toFixed(2)}%`);
+
 
 
 // Function to place buildings
@@ -206,6 +215,7 @@ placeBuildings(0.10, 3);
 // // Draw the coordinate system
 // const axesHelper = new THREE.AxesHelper(10);
 // scene.add(axesHelper);
+
 
 
 
