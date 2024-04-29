@@ -59,7 +59,6 @@ recursive_draw_lines(x, y, x_prev, y_prev,15);
 
 
 
-
 function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0) {
     if (depth === 0) return;
 
@@ -117,7 +116,7 @@ function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0) {
         if (y_prev > y)
             y = getRandomInt(y_prev - 2, y + 2);
         else
-            y = getRandomInt(y_prev + 2, y - 2);
+            y = getRandomInt(y_prev + 2, y - 2)
     
         y = Math.max(0, Math.min(y, gridSize - 1));
         y_prev = y;
@@ -155,33 +154,87 @@ function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0) {
         draw_vertical_line(x, y, x_prev, y_prev, depth - 1, direction = 0);
         draw_vertical_line(x, y, x_prev, y_prev, depth - 1, direction = 1);
     }
-    
 
 
 
 
+// Function to place buildings
+function placeBuildings(probability, maxBuildingSize) {
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            // Check if current spot is available (not a road or already taken by another building)
+            if (grid[i][j] === 0) {
+                // Decide randomly whether to place a building here based on probability
+                if (Math.random() < probability) {
+                    // Randomly decide the size of the building
+                    const buildingSize = Math.floor(Math.random() * maxBuildingSize) + 1;
 
-// Draw the coordinate system
-const axesHelper = new THREE.AxesHelper(10);
-scene.add(axesHelper);
+                    // Check if a building of this size can be placed here
+                    if (canPlaceBuilding(i, j, buildingSize)) {
+                        // Place the building
+                        for (let k = 0; k < buildingSize; k++) {
+                            for (let l = 0; l < buildingSize; l++) {
+                                grid[i + k][j + l] = 2;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Function to check if a building can be placed
+function canPlaceBuilding(x, y, size) {
+    // Check grid boundaries and surrounding buffer
+    if (x + size + 1 > gridSize || y + size + 1 > gridSize || x - 1 < 0 || y - 1 < 0) {
+        return false;
+    }
+    for (let i = x - 1; i <= x + size; i++) {
+        for (let j = y - 1; j <= y + size; j++) {
+            if (grid[i][j] !== 0) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+// Example of placing buildings with a 5% chance and max building size of 3x3
+placeBuildings(0.10, 3);
+
+// // Draw the coordinate system
+// const axesHelper = new THREE.AxesHelper(10);
+// scene.add(axesHelper);
 
 
 
 
-// Create canvas based on grid
 function createCanvas() {
     const cellSize = 1;
     const cellGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
+
+    // Define colors for different types of grid cells
+    const colors = {
+        0: new THREE.Color(0, 0, 0), // Empty space
+        1: new THREE.Color(1, 1, 1), // Road (white)
+        2: new THREE.Color(0, 0, 1)  // Building (blue)
+    };
+
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
-            const color = grid[i][j] === 1 ? new THREE.Color(1, 1, 1) : new THREE.Color(0, 0, 0);
+            const type = grid[i][j];
+            const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5); // Default color if type is not defined
             const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
             const cell = new THREE.Mesh(cellGeometry, material);
-            cell.position.set(j -0.5*gridSize, i -0.5*gridSize , 0); // minus 1/2 gridsize can be removed later on. it just for centering
+            cell.position.set(j - 0.5 * gridSize, i - 0.5 * gridSize, 0); // Center the grid in the scene
             scene.add(cell);
         }
     }
 }
+
+
+
 
 
 
