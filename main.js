@@ -13,9 +13,9 @@ const controls = new OrbitControls(camera, renderer.domElement);
 camera.position.set(0, 50, 100);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-var line_segment_size = 15;
+var line_segment_size = 30;
 const gridSize = 80;
-var iterations_of_Lsystem = 15;
+var iterations_of_Lsystem = 20;
 
 function getRandomInt(min, max) {
     min = Math.ceil(min);
@@ -25,8 +25,6 @@ function getRandomInt(min, max) {
 
 
 // Grid setup
-
-
 const grid = [];
 for (let i = 0; i < gridSize; i++) {
     grid[i] = new Array(gridSize).fill(0);
@@ -178,7 +176,7 @@ function placeBuildings(probability, maxBuildingSize) {
                     // Randomly decide the size of the building
                     const buildingSize = Math.floor(Math.random() * maxBuildingSize) + 1;
 
-                    // Check if a building of this size can be placed here
+                    // Check if a building of this size can be placed here and has a road next to it
                     if (canPlaceBuilding(i, j, buildingSize)) {
                         // Place the building
                         for (let k = 0; k < buildingSize; k++) {
@@ -195,26 +193,49 @@ function placeBuildings(probability, maxBuildingSize) {
 
 // Function to check if a building can be placed
 function canPlaceBuilding(x, y, size) {
-    // Check grid boundaries and surrounding buffer
-    if (x + size + 1 > gridSize || y + size + 1 > gridSize || x - 1 < 0 || y - 1 < 0) {
+    // Check grid boundaries
+    if (x + size > gridSize || y + size > gridSize) {
         return false;
     }
-    for (let i = x - 1; i <= x + size; i++) {
-        for (let j = y - 1; j <= y + size; j++) {
-            if (grid[i][j] !== 0) {
+    
+    // Check if adjacent to a road
+    let adjacentRoad = false;
+    const checkPositions = [
+        [x - 1, y], [x + size, y], [x, y - 1], [x, y + size],  // Check edges
+        [x - 1, y - 1], [x + size, y - 1], [x - 1, y + size], [x + size, y + size]  // Check corners
+    ];
+
+    for (const [checkX, checkY] of checkPositions) {
+        if (checkX >= 0 && checkX < gridSize && checkY >= 0 && checkY < gridSize && grid[checkX][checkY] === 1) {
+            adjacentRoad = true;
+            break;
+        }
+    }
+
+    if (!adjacentRoad) {
+        return false;
+    }
+
+    // Ensure the space is available and has at least one empty space or road around it
+    for (let i = Math.max(x - 1, 0); i <= Math.min(x + size, gridSize - 1); i++) {
+        for (let j = Math.max(y - 1, 0); j <= Math.min(y + size, gridSize - 1); j++) {
+            if (i < x || i >= x + size || j < y || j >= y + size) { // Only check the buffer zone
+                if (grid[i][j] === 2) { // If there is another building in the buffer
+                    return false;
+                }
+            } else if (grid[i][j] !== 0) { // Check the building area
                 return false;
             }
         }
     }
-    return true;
+
+    return true; // Valid position for a building
 }
 
-// Example of placing buildings with a 5% chance and max building size of 3x3
-placeBuildings(0.10, 3);
+placeBuildings(0.99, 4);
 
-// // Draw the coordinate system
-// const axesHelper = new THREE.AxesHelper(10);
-// scene.add(axesHelper);
+
+
 
 
 
