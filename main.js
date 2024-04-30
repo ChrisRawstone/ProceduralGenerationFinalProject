@@ -39,7 +39,7 @@ var y = Math.floor(gridSize / 2);
 var x_prev = x;
 var y_prev = y;
 
-console.log("calc",Math.floor(grid.length*3/4)-Math.floor(grid.length*1/4))
+// console.log("calc",Math.floor(grid.length*3/4)-Math.floor(grid.length*1/4))
 
 // initial start from 1/4 of the road to 3/4 of the road
 for (let j = Math.floor(grid.length*1/4); j < Math.floor(grid.length*3/4); j++) { 
@@ -61,18 +61,18 @@ recursive_draw_lines(x, y, x_prev, y_prev, iterations_of_Lsystem);
 
 function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0,bias=weight_bias) {
     if (depth === 0) return;
-    console.log("x_prev:",x_prev,"x:",x)
-    console.log("bias:",weight_bias)
+    // console.log("x_prev:",x_prev,"x:",x)
+    // console.log("bias:",weight_bias)
     if (x_prev > x) {
-
-        x = biasedRandom(x, x_prev,bias);
+        x = getRandomInt(x_prev - 2, x + 2);
+        // x = biasedRandom(x, x_prev,bias);
     }
     else {
-
-        x = biasedRandom(x_prev, x,bias);
+        x = getRandomInt(x_prev + 2, x - 2);
+        // x = biasedRandom(x_prev, x,bias);
         }
 
-    console.log(x);
+    // console.log(x);
 
     x = Math.max(0, Math.min(x, gridSize - 1));
     x_prev = x;
@@ -127,11 +127,11 @@ function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0,bias=weig
         if (depth === 0) return;
     
         if (y_prev > y)
-            y = biasedRandom(y, y_prev,bias);
-            // y = getRandomInt(y_prev - 2, y + 2);
+            // y = biasedRandom(y, y_prev,bias);
+            y = getRandomInt(y_prev - 2, y + 2);
         else
-            y = biasedRandom(y_prev, y,bias);
-            // y = getRandomInt(y_prev + 2, y - 2)
+            // y = biasedRandom(y_prev, y,bias);
+            y = getRandomInt(y_prev + 2, y - 2)
     
         y = Math.max(0, Math.min(y, gridSize - 1));
         y_prev = y;
@@ -175,39 +175,39 @@ function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0,bias=weig
     }
 
 
-// Calculate the percentage of 1s
-const countOfOnes = grid.flat().filter(value => value === 1).length;
-const totalCells = gridSize * gridSize;
-const percentageOfOnes = (countOfOnes / totalCells) * 100;
+// // Calculate the percentage of 1s
+// const countOfOnes = grid.flat().filter(value => value === 1).length;
+// const totalCells = gridSize * gridSize;
+// const percentageOfOnes = (countOfOnes / totalCells) * 100;
 
-// Print the result
-console.log(`Percentage of fields with 1: ${percentageOfOnes.toFixed(2)}%`);
+// // Print the result
+// console.log(`Percentage of fields with 1: ${percentageOfOnes.toFixed(2)}%`);
 
 
 
-function biasedRandom(lowerBound, upperBound, biasFactor = 2) {
-    // Validate the input to ensure lowerBound is less than upperBound
-    if (lowerBound >= upperBound) {
-        throw new Error("Lower bound must be less than upper bound.");
-    }
+// function biasedRandom(lowerBound, upperBound, biasFactor = 2) {
+//     // Validate the input to ensure lowerBound is less than upperBound
+//     if (lowerBound >= upperBound) {
+//         throw new Error("Lower bound must be less than upper bound.");
+//     }
 
-    let sum = 0;
-    // Summing up 'biasFactor' amount of random numbers to skew the distribution towards the middle
-    for (let i = 0; i < biasFactor; i++) {
-        sum += Math.random();
-    }
+//     let sum = 0;
+//     // Summing up 'biasFactor' amount of random numbers to skew the distribution towards the middle
+//     for (let i = 0; i < biasFactor; i++) {
+//         sum += Math.random();
+//     }
 
-    // Average the sum to get a skewed random number
-    let avgRandom = sum / biasFactor;
+//     // Average the sum to get a skewed random number
+//     let avgRandom = sum / biasFactor;
 
-    // Scale and adjust the random number to fit within the bounds
-    let biasedRandomNumber = lowerBound + avgRandom * (upperBound - lowerBound);
+//     // Scale and adjust the random number to fit within the bounds
+//     let biasedRandomNumber = lowerBound + avgRandom * (upperBound - lowerBound);
 
-    return Math.floor(biasedRandomNumber);
-}
+//     return Math.floor(biasedRandomNumber);
+// }
 
 // Example of usage:
-console.log(biasedRandom(40, 69,5)); // Most results will be closer to 15
+// console.log(biasedRandom(40, 69,5)); // Most results will be closer to 15
 
 // Function to place buildings
 function placeBuildings(probability, maxBuildingSize) {
