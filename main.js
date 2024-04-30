@@ -17,7 +17,8 @@ camera.lookAt(new THREE.Vector3(0, 0, 0));
 const gridSize = 80;
 // var line_segment_size = Math.floor(3/4*gridSize - 1/4*gridSize);
 var line_segment_size = 20
-var iterations_of_Lsystem = 5;
+var iterations_of_Lsystem = 10;
+var weight_bias=10000;
 
 function getRandomInt(min, max) {
     min = Math.ceil(min);
@@ -39,7 +40,7 @@ var y = Math.floor(gridSize / 2);
 var x_prev = x;
 var y_prev = y;
 
-// console.log("calc",Math.floor(grid.length*3/4)-Math.floor(grid.length*1/4))
+console.log("calc",Math.floor(grid.length*3/4)-Math.floor(grid.length*1/4))
 
 // initial start from 1/4 of the road to 3/4 of the road
 for (let j = Math.floor(grid.length*1/4); j < Math.floor(grid.length*3/4); j++) { 
@@ -48,56 +49,74 @@ for (let j = Math.floor(grid.length*1/4); j < Math.floor(grid.length*3/4); j++) 
     x++; 
 
 } 
-var weight_bias=20;
+
+
 
 function recursive_draw_lines(x, y, x_prev, y_prev,depth) {
-    // draw_vertical_line(x, y, x_prev, y_prev,depth,0,weight_bias); //  0 means making a line downwards
-    draw_vertical_line(x, y, x_prev, y_prev,depth,1,weight_bias); // 1 means making a line upwards
+    draw_vertical_line(x, y, x_prev, y_prev,depth,0,weight_bias); //  0 means making a line downwards
+    // draw_vertical_line(x, y, x_prev, y_prev,depth,1,weight_bias); // 1 means making a line upwards
 
 }
 recursive_draw_lines(x, y, x_prev, y_prev, iterations_of_Lsystem);
 
-
+grid[1][41]=1;
 
 function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0,bias=weight_bias) {
     if (depth === 0) return;
-    // console.log("x_prev:",x_prev,"x:",x)
-    // console.log("bias:",weight_bias)
-    if (x_prev > x) {
-        x = getRandomInt(x_prev - 2, x + 2);
-        // x = biasedRandom(x, x_prev,bias);
-    }
-    else {
-        x = getRandomInt(x_prev + 2, x - 2);
-        // x = biasedRandom(x_prev, x,bias);
-        }
+    if (x >= gridSize || x <= 0) return;
+    if (y >= gridSize || y <= 0) return;
+    console.log("vertical_line")
+    console.log("x_prev:",x_prev,"x:",x)
+    console.log("y_prev:",y_prev,"y:",y)
+    console.log("bias:",weight_bias)
 
-    // console.log(x);
+    x = Math.max(0, Math.min(x, gridSize - 1));
+
+ 
+    if ((x_prev > x) && (x+2 < x_prev-2)) {
+        x = biasedRandom(x+2, x_prev-2,bias);
+    } else if ((x > x_prev) && (x+2 > x_prev-2)) {
+        x = biasedRandom(x_prev-2, x+2,bias);
+    } else {
+        console.log("special case")
+        x=x
+    }
+
+    console.log("x_prev:",x_prev,"x:",x)
+    console.log("y_prev:",y_prev,"y:",y)
 
     x = Math.max(0, Math.min(x, gridSize - 1));
     x_prev = x;
 
     let adjacentCount = 0; // Counter for adjacent road cells
 
-    for (let j = 1; j < line_segment_size; j++) {
-        if (direction === 0) { // Moving upwards
-            if (y-j < 0 || y-j >= gridSize) break;
-    
-            // Check both left and right sides of the proposed line
-            if (x + 1 < gridSize && grid[y - j][x + 1] == 1) adjacentCount++;
-            if (x - 1 >= 0 && grid[y - j][x - 1] == 1) adjacentCount++;
+    // delete this:
+    if ((x==39) && (y==20)) console.log("heeeey")
 
+    for (let j = 1; j < line_segment_size; j++) {
+        
+        if (direction == 0) { // Moving upwards
+            console.log("Going downwards?")
+            if (y-j < 0 || y-j >= gridSize) {console.log("hit2"); break;}
+            // grid[y-j][x]=3;
+            // Check both left and right sides of the proposed line
+            if (x + 1 < gridSize && grid[y - j][x + 1] == 1) {adjacentCount++; console.log("adjacentCount",adjacentCount)}
+            if (x - 1 >= 0 && grid[y - j][x - 1] == 1) {adjacentCount++; console.log("adjacentCount",adjacentCount)}
+            console.log(grid[y-j][x])
+            
             // Stop if overwriting another road or out of bounds
-            if (!(y < gridSize && y >= 0) || grid[y][x] == 1) break; 
+            if (!(y-j < gridSize && y-j >= 0) && grid[y-j][x] == 1) {console.log("hit3"); break;}
         } else { // Moving downwards
-            if (y+j >= gridSize || y+j < 0) break;
+            console.log("Going Upwards?")
+            if (y+j >= gridSize || y+j < 0) {console.log("hit4"); break;}
     
             // Check both left and right sides of the proposed line
-            if (x + 1 < gridSize && grid[y + j][x + 1] == 1) adjacentCount++;
+            // grid[y+j][x]=3;
+            if (x + 1 < gridSize && grid[y + j][x + 1] == 1) {adjacentCount++; console.log("adjacentCount",adjacentCount)}
             if (x - 1 >= 0 && grid[y + j][x - 1] == 1) adjacentCount++;
+            
             // Stop if overwriting another road or out of bounds
-            print()
-            if (!(y < gridSize && y >= 0) || grid[y][x] == 1) break; 
+            if (!(y < gridSize && y >= 0) && grid[y][x] == 1) {console.log("hit5"); break;}
         }
     }
     
@@ -116,23 +135,56 @@ function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0,bias=weig
         else y++;
 
         // Stop if overwriting another road or out of bounds
-        if (!(y < gridSize && y >= 0) || grid[y][x] == 1) break; 
+        if (!(y < gridSize && y >= 0) || grid[y][x] == 1) return; 
     }
-
-    // draw_horizontal_line(x, y, x_prev, y_prev, depth - 1, direction = 0,bias = Math.floor(bias*1/2));
-    draw_horizontal_line(x, y, x_prev, y_prev, depth - 1, direction = 1,bias = Math.floor(bias*1/2));
+    console.log("x_prev:",x_prev,"x:",x)
+    console.log("y_prev:",y_prev,"y:",y)
+    // console.log("bias",bias)
+    draw_horizontal_line(x, y, x_prev, y_prev, depth - 1, direction = 0,bias = Math.ceil(bias));
+    draw_horizontal_line(x, y, x_prev, y_prev, depth - 1, direction = 1,bias = Math.ceil(bias));
 }
 
     function draw_horizontal_line(x, y, x_prev, y_prev, depth, direction = 0,bias = weight_bias) {
-        if (depth === 0) return;
-    
-        if (y_prev > y)
-            // y = biasedRandom(y, y_prev,bias);
-            y = getRandomInt(y_prev - 2, y + 2);
-        else
-            // y = biasedRandom(y_prev, y,bias);
-            y = getRandomInt(y_prev + 2, y - 2)
-    
+        if (depth == 0) return;
+        if (x >= gridSize || x <= 0) return;
+        if (y >= gridSize || y <= 0) return;
+
+        console.log("horisontal_line")
+        console.log("bias",bias)
+        console.log("x_prev:",x_prev,"x:",x)
+        console.log("y_prev:",y_prev,"y:",y)
+        // console.log("bias:",biasedRandom(y_prev, y, bias));
+
+        // if (y_prev == y) {
+        //     y=y
+        // } else if (y_prev > y) {
+        //     console.log("first")
+        //     y = biasedRandom(y-2, y_prev+2, bias);
+        //     // y = getRandomInt(y_prev - 2, y + 2);
+        // } else {
+        //     console.log("second")
+        //     y = biasedRandom(y_prev+2, y-2, bias);
+        //     // y = getRandomInt(y_prev + 2, y - 2)
+        // }
+
+        // y = Math.max(0, Math.min(y, gridSize - 1));
+
+ 
+        if ((y_prev > y) && (y+2 < y_prev-2)) {
+            console.log("first:", "y+2: ub:", y-2, "y_prev-2: lb:",y_prev-2)
+            y = biasedRandom(y+2, y_prev-2, bias); // this should proably be opposite?
+        } else if ((y_prev < y) && (y-2 > y_prev+2)) { 
+            console.log("second:", "y_prev+2: lb:", y_prev+2, "y-2: ub:",y-2)
+            // console.log("bias:", biasedRandom(y-2, y_prev+2,bias))
+            y = biasedRandom(y_prev+2, y-2,bias); // this I think works
+        } else {
+            console.log("special case")
+            y=y
+        }
+
+        console.log("x_prev:",x_prev,"x:",x)
+        console.log("y_prev:",y_prev,"y:",y)
+
         y = Math.max(0, Math.min(y, gridSize - 1));
         y_prev = y;
     
@@ -150,6 +202,7 @@ function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0,bias=weig
                 if (y + 1 < gridSize && grid[y + 1][x + j] == 1) adjacentCount++;
                 if (y - 1 >= 0 && grid[y - 1][x + j] == 1) adjacentCount++;
 
+                console.log("x:",x,"y:",y)
                 if (!(x >= gridSize || x < 0) && grid[y][x] == 1) break; // Stop if overwriting another road
             }
         }
@@ -160,54 +213,54 @@ function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0,bias=weig
         }
     
         for (let j = 1; j < line_segment_size; j++) {
-            if (x >= gridSize || x < 0) break;
+            if (x >= gridSize || x <= 0) break; // checks if we are outside the grid
     
             grid[y][x] = 1; // Place the road
     
             if (direction == 0) x--;
             else x++;
     
-            if (!(x >= gridSize || x < 0) && grid[y][x] == 1) break; // Stop if overwriting another road
+            if (!(x >= gridSize || x < 0) && grid[y][x] == 1) return; // Stop if overwriting another road
         }
     
-        // draw_vertical_line(x, y, x_prev, y_prev, depth - 1, direction = 0,bias = Math.floor(bias*1/2)); 
-        draw_vertical_line(x, y, x_prev, y_prev, depth - 1, direction = 1,bias = Math.floor(bias*1/2));
+        draw_vertical_line(x, y, x_prev, y_prev, depth - 1, direction = 0,bias = Math.ceil(bias)); 
+        draw_vertical_line(x, y, x_prev, y_prev, depth - 1, direction = 1,bias = Math.ceil(bias));
     }
 
 
-// // Calculate the percentage of 1s
-// const countOfOnes = grid.flat().filter(value => value === 1).length;
-// const totalCells = gridSize * gridSize;
-// const percentageOfOnes = (countOfOnes / totalCells) * 100;
+// Calculate the percentage of 1s
+const countOfOnes = grid.flat().filter(value => value === 1).length;
+const totalCells = gridSize * gridSize;
+const percentageOfOnes = (countOfOnes / totalCells) * 100;
 
-// // Print the result
-// console.log(`Percentage of fields with 1: ${percentageOfOnes.toFixed(2)}%`);
+// Print the result
+console.log(`Percentage of fields with 1: ${percentageOfOnes.toFixed(2)}%`);
 
 
 
-// function biasedRandom(lowerBound, upperBound, biasFactor = 2) {
-//     // Validate the input to ensure lowerBound is less than upperBound
-//     if (lowerBound >= upperBound) {
-//         throw new Error("Lower bound must be less than upper bound.");
-//     }
+function biasedRandom(lowerBound, upperBound, biasFactor = 2) {
+    // Validate the input to ensure lowerBound is less than upperBound
+    if (lowerBound >= upperBound) {
+        throw new Error("Lower bound must be less than upper bound.");
+    }
 
-//     let sum = 0;
-//     // Summing up 'biasFactor' amount of random numbers to skew the distribution towards the middle
-//     for (let i = 0; i < biasFactor; i++) {
-//         sum += Math.random();
-//     }
+    let sum = 0;
+    // Summing up 'biasFactor' amount of random numbers to skew the distribution towards the middle
+    for (let i = 0; i < biasFactor; i++) {
+        sum += Math.random();
+    }
 
-//     // Average the sum to get a skewed random number
-//     let avgRandom = sum / biasFactor;
+    // Average the sum to get a skewed random number
+    let avgRandom = sum / biasFactor;
 
-//     // Scale and adjust the random number to fit within the bounds
-//     let biasedRandomNumber = lowerBound + avgRandom * (upperBound - lowerBound);
+    // Scale and adjust the random number to fit within the bounds
+    let biasedRandomNumber = lowerBound + avgRandom * (upperBound - lowerBound);
 
-//     return Math.floor(biasedRandomNumber);
-// }
+    return Math.floor(biasedRandomNumber);
+}
 
 // Example of usage:
-// console.log(biasedRandom(40, 69,5)); // Most results will be closer to 15
+console.log(biasedRandom(40, 69,5)); // Most results will be closer to 15
 
 // Function to place buildings
 function placeBuildings(probability, maxBuildingSize) {
@@ -293,7 +346,8 @@ function createCanvas() {
     const colors = {
         0: new THREE.Color(0, 0, 0), // Empty space
         1: new THREE.Color(1, 1, 1), // Road (white)
-        2: new THREE.Color(0, 0, 1)  // Building (blue)
+        2: new THREE.Color(0, 0, 1),  // Building (blue)
+        3: new THREE.Color(1, 0.5, 0)  // Building (orange)
     };
 
     for (let i = 0; i < gridSize; i++) {
