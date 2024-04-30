@@ -13,9 +13,11 @@ const controls = new OrbitControls(camera, renderer.domElement);
 camera.position.set(0, 50, 100);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-var line_segment_size = 30;
+
 const gridSize = 80;
-var iterations_of_Lsystem = 20;
+// var line_segment_size = Math.floor(3/4*gridSize - 1/4*gridSize);
+var line_segment_size = 20
+var iterations_of_Lsystem = 5;
 
 function getRandomInt(min, max) {
     min = Math.ceil(min);
@@ -30,41 +32,47 @@ for (let i = 0; i < gridSize; i++) {
     grid[i] = new Array(gridSize).fill(0);
 }
 
-
-var x = 0;
+// initial start from 1/4 
+var x = Math.floor(grid.length*1/4);
 var y = Math.floor(gridSize / 2);
 
 var x_prev = x;
 var y_prev = y;
 
+console.log("calc",Math.floor(grid.length*3/4)-Math.floor(grid.length*1/4))
 
-// initial start
-for (let j = 0; j < grid.length; j++) { 
+// initial start from 1/4 of the road to 3/4 of the road
+for (let j = Math.floor(grid.length*1/4); j < Math.floor(grid.length*3/4); j++) { 
     if (x >= gridSize) break;
     grid[y][x] = 1; 
     x++; 
 
 } 
-
-
-
+var weight_bias=20;
 
 function recursive_draw_lines(x, y, x_prev, y_prev,depth) {
-    draw_vertical_line(x, y, x_prev, y_prev,depth,0); //  0 means making a line upwards
-    draw_vertical_line(x, y, x_prev, y_prev,depth,1); // 1 means making a line downwards
+    // draw_vertical_line(x, y, x_prev, y_prev,depth,0,weight_bias); //  0 means making a line downwards
+    draw_vertical_line(x, y, x_prev, y_prev,depth,1,weight_bias); // 1 means making a line upwards
 
 }
 recursive_draw_lines(x, y, x_prev, y_prev, iterations_of_Lsystem);
 
 
 
-function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0) {
+function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0,bias=weight_bias) {
     if (depth === 0) return;
+    console.log("x_prev:",x_prev,"x:",x)
+    console.log("bias:",weight_bias)
+    if (x_prev > x) {
 
-    if (x_prev > x)
-        x = getRandomInt(x_prev - 2, x + 2);
-    else
-        x = getRandomInt(x_prev + 2, x - 2);
+        x = biasedRandom(x, x_prev,bias);
+    }
+    else {
+
+        x = biasedRandom(x_prev, x,bias);
+        }
+
+    console.log(x);
 
     x = Math.max(0, Math.min(x, gridSize - 1));
     x_prev = x;
@@ -78,12 +86,18 @@ function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0) {
             // Check both left and right sides of the proposed line
             if (x + 1 < gridSize && grid[y - j][x + 1] == 1) adjacentCount++;
             if (x - 1 >= 0 && grid[y - j][x - 1] == 1) adjacentCount++;
+
+            // Stop if overwriting another road or out of bounds
+            if (!(y < gridSize && y >= 0) || grid[y][x] == 1) break; 
         } else { // Moving downwards
             if (y+j >= gridSize || y+j < 0) break;
     
             // Check both left and right sides of the proposed line
             if (x + 1 < gridSize && grid[y + j][x + 1] == 1) adjacentCount++;
             if (x - 1 >= 0 && grid[y + j][x - 1] == 1) adjacentCount++;
+            // Stop if overwriting another road or out of bounds
+            print()
+            if (!(y < gridSize && y >= 0) || grid[y][x] == 1) break; 
         }
     }
     
@@ -105,17 +119,19 @@ function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0) {
         if (!(y < gridSize && y >= 0) || grid[y][x] == 1) break; 
     }
 
-    draw_horizontal_line(x, y, x_prev, y_prev, depth - 1, direction = 0);
-    draw_horizontal_line(x, y, x_prev, y_prev, depth - 1, direction = 1);
+    // draw_horizontal_line(x, y, x_prev, y_prev, depth - 1, direction = 0,bias = Math.floor(bias*1/2));
+    draw_horizontal_line(x, y, x_prev, y_prev, depth - 1, direction = 1,bias = Math.floor(bias*1/2));
 }
 
-    function draw_horizontal_line(x, y, x_prev, y_prev, depth, direction = 0) {
+    function draw_horizontal_line(x, y, x_prev, y_prev, depth, direction = 0,bias = weight_bias) {
         if (depth === 0) return;
     
         if (y_prev > y)
-            y = getRandomInt(y_prev - 2, y + 2);
+            y = biasedRandom(y, y_prev,bias);
+            // y = getRandomInt(y_prev - 2, y + 2);
         else
-            y = getRandomInt(y_prev + 2, y - 2)
+            y = biasedRandom(y_prev, y,bias);
+            // y = getRandomInt(y_prev + 2, y - 2)
     
         y = Math.max(0, Math.min(y, gridSize - 1));
         y_prev = y;
@@ -127,14 +143,18 @@ function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0) {
                 if (x-j < 0 || x-j >= gridSize) break;
                 if (y + 1 < gridSize && grid[y + 1][x - j] == 1) adjacentCount++;
                 if (y - 1 >= 0 && grid[y - 1][x - j] == 1) adjacentCount++;
+
+                if (!(x >= gridSize || x < 0) && grid[y][x] == 1) break; // Stop if overwriting another road
             } else { // Checks forward direction along x-axis
                 if (x+j >= gridSize || x+j < 0) break;
                 if (y + 1 < gridSize && grid[y + 1][x + j] == 1) adjacentCount++;
                 if (y - 1 >= 0 && grid[y - 1][x + j] == 1) adjacentCount++;
+
+                if (!(x >= gridSize || x < 0) && grid[y][x] == 1) break; // Stop if overwriting another road
             }
         }
     
-        if (adjacentCount > 4) {
+        if (adjacentCount > 3) {
             console.log("Cannot place line, too many adjacent roads");
             return; // Exit the function if there are more than 3 adjacent road cells
         }
@@ -150,8 +170,8 @@ function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0) {
             if (!(x >= gridSize || x < 0) && grid[y][x] == 1) break; // Stop if overwriting another road
         }
     
-        draw_vertical_line(x, y, x_prev, y_prev, depth - 1, direction = 0);
-        draw_vertical_line(x, y, x_prev, y_prev, depth - 1, direction = 1);
+        // draw_vertical_line(x, y, x_prev, y_prev, depth - 1, direction = 0,bias = Math.floor(bias*1/2)); 
+        draw_vertical_line(x, y, x_prev, y_prev, depth - 1, direction = 1,bias = Math.floor(bias*1/2));
     }
 
 
@@ -164,6 +184,30 @@ const percentageOfOnes = (countOfOnes / totalCells) * 100;
 console.log(`Percentage of fields with 1: ${percentageOfOnes.toFixed(2)}%`);
 
 
+
+function biasedRandom(lowerBound, upperBound, biasFactor = 2) {
+    // Validate the input to ensure lowerBound is less than upperBound
+    if (lowerBound >= upperBound) {
+        throw new Error("Lower bound must be less than upper bound.");
+    }
+
+    let sum = 0;
+    // Summing up 'biasFactor' amount of random numbers to skew the distribution towards the middle
+    for (let i = 0; i < biasFactor; i++) {
+        sum += Math.random();
+    }
+
+    // Average the sum to get a skewed random number
+    let avgRandom = sum / biasFactor;
+
+    // Scale and adjust the random number to fit within the bounds
+    let biasedRandomNumber = lowerBound + avgRandom * (upperBound - lowerBound);
+
+    return Math.floor(biasedRandomNumber);
+}
+
+// Example of usage:
+console.log(biasedRandom(40, 69,5)); // Most results will be closer to 15
 
 // Function to place buildings
 function placeBuildings(probability, maxBuildingSize) {
