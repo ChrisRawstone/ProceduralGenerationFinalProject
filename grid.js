@@ -14,7 +14,8 @@ export function init_grid(grid_Size) {
 }
 
 export function initialize_starting_road(grid, grid_Size, x, y) {
-    var x;
+    var x_prev = x;
+    var y_prev = y;
     // initial start from 1/4 of the road to 3/4 of the road
     for (let j = Math.floor(grid.length*1/4); j < Math.floor(grid.length*3/4); j++) { 
         if (x >= grid_Size) break;
@@ -23,5 +24,5 @@ export function initialize_starting_road(grid, grid_Size, x, y) {
 
     } 
 
-    return grid, x, y;
+    return [grid, x, x_prev, y, y_prev];
 }
