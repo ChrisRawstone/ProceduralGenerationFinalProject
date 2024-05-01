@@ -1,14 +1,27 @@
 
-import { gridSize } from './main.js';
+// import { gridSize } from './main.js';
 
 
 // Grid setup
 
 
-export function init_grid () {
-    const grid = [];
-    for (let i = 0; i < gridSize; i++) {
-        grid[i] = new Array(gridSize).fill(0);
-}
+export function init_grid (grid_Size) {
+    var grid = [];
+    for (let i = 0; i < grid_Size; i++) {
+        grid[i] = new Array(grid_Size).fill(0);
+    }
+    return grid;
 }
 
+export function initialize_starting_road(grid, gridSize,x,y) { 
+// initial start from 1/4 of the road to 3/4 of the road
+for (let j = Math.floor(grid.length*1/4); j < Math.floor(grid.length*3/4); j++) { 
+    if (x >= gridSize) break;
+    grid[y][x] = 1; 
+    x++; 
+
+} 
+var x_prev = x;
+var y_prev = y;
+return grid, x, x_prev, y, y_prev;
+}

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './build/controls/OrbitControls.js';
-import { grid, init_grid} from './grid.js';
+import { init_grid, initialize_starting_road} from './grid.js';
 
 // Set up the scene, camera, and renderer
 const scene = new THREE.Scene();
@@ -15,6 +15,7 @@ camera.position.set(0, 50, 100);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
 
+var grid, x_prev, y_prev;
 export const gridSize = 160;
 // var line_segment_size = Math.floor(3/4*gridSize - 1/4*gridSize);
 var line_segment_size = 10
@@ -22,30 +23,31 @@ var iterations_of_Lsystem = 20;
 var weight_bias=1000 ;
 var bias_half_life=0.5;
 
+
 function getRandomInt(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-init_grid();
+
+
+
+grid = init_grid(gridSize);
 
 // initial start from 1/4 
 var x = Math.floor(grid.length*1/4);
 var y = Math.floor(gridSize / 2);
 
-var x_prev = x;
-var y_prev = y;
+grid, x, x_prev, y, y_prev = initialize_starting_road(grid, gridSize, x, y);
+
+
+
+
 
 console.log("calc",Math.floor(grid.length*3/4)-Math.floor(grid.length*1/4))
 
-// initial start from 1/4 of the road to 3/4 of the road
-for (let j = Math.floor(grid.length*1/4); j < Math.floor(grid.length*3/4); j++) { 
-    if (x >= gridSize) break;
-    grid[y][x] = 1; 
-    x++; 
 
-} 
 
 
 
