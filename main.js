@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './build/controls/OrbitControls.js';
 import { init_grid, initialize_starting_road } from './grid.js';
-// import gltf loader
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 
@@ -18,7 +17,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 camera.position.set(0, 50, 100);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-
+export var grid;
 var grid, x_prev, y_prev;
 var gridSize = 160;
 
@@ -43,61 +42,25 @@ grid = init_grid(gridSize);
 
 [grid, x, x_prev, y, y_prev] = initialize_starting_road(grid, gridSize, x, y);
 
-
-
-
-
-function populateGridWithRoadsRecursively(x, y, x_prev, y_prev, depth) {
-    placeVerticalRoad(x, y, x_prev, y_prev, depth, 0, weight_bias); //  0 means making a line downwards
-    placeVerticalRoad(x, y, x_prev, y_prev, depth, 1, weight_bias); // 1 means making a line upwards
-
-}
-populateGridWithRoadsRecursively(x, y, x_prev, y_prev, iterations_of_Lsystem);
-
-
-
-function placeVerticalRoad(x, y, x_prev, y_prev, depth, direction = 0, bias = weight_bias) {
-    if (depth === 0) return; // base case
-    // check if out of bounds
-    if (x >= gridSize || x < 0) return;
-    if (x >= gridSize || x < 0) return;
-
-
-
-    // this decides randomly where we place the horisontal road on the vertical road
-    if ((x_prev > x) && (x + 2 < x_prev - 2)) {
-        x = biasedRandom(x + 2, x_prev - 2, bias);
-    } else if ((x > x_prev) && (x + 2 > x_prev - 2)) {
-        x = biasedRandom(x_prev - 2, x + 2, bias);
-    } else {
-        x = x
-    }
-
-    // making sure we are within the grid still.
-    x = Math.max(0, Math.min(x, gridSize - 1));
-    x_prev = x;
-
+// this function make sures that no roads can spawn adjacent to each other. 
+// however some roads still does that
+function calculateAdjacentRoadsForVerticalLines(x,y,grid,direction, gridSize) {
     let adjacentCount = 0; // Counter for adjacent road cells
 
-    // this function make sures that no roads can spawn adjacent to each other. 
-    // however some roads still does that
     for (let j = 1; j < line_segment_size; j++) {
-
         if (direction == 0) { // Moving downwards!!
             if (y - j < 0 || y - j >= gridSize) break;
-            // grid[y-j][x]=3;
             // Check both left and right sides of the proposed line
             if (x + 1 < gridSize && grid[y - j][x + 1] == 1) adjacentCount++;
             if (x - 1 >= 0 && grid[y - j][x - 1] == 1) adjacentCount++;
 
-
             // Stop if overwriting another road or out of bounds
             if (!(y - j < gridSize && y - j >= 0) && grid[y - j][x] == 1) break;
+
         } else { // Moving upwards!!
             if (y + j >= gridSize || y + j < 0) break;
 
             // Check both left and right sides of the proposed line
-            // grid[y+j][x]=3;
             if (x + 1 < gridSize && grid[y + j][x + 1] == 1) adjacentCount++;
             if (x - 1 >= 0 && grid[y + j][x - 1] == 1) adjacentCount++;
 
@@ -106,52 +69,13 @@ function placeVerticalRoad(x, y, x_prev, y_prev, depth, direction = 0, bias = we
         }
     }
 
-    if (adjacentCount > 3) {
-        return; // Exit the function if there are more than 3 adjacent road cells
-    }
-
-    // this draws the line
-    for (let j = 1; j < line_segment_size; j++) {
-        if (y >= gridSize || y < 0) break;
-
-        grid[y][x] = 1; // Place the road
-
-        if (direction === 0) y--;
-        else y++;
-
-        // Stop if overwriting another road or out of bounds
-        if (!(y < gridSize && y >= 0) || grid[y][x] == 1) break;
-    }
-    
-    // Recursion
-    placeHorisontalRoad(x, y, x_prev, y_prev, depth - 1, direction = 0, bias = Math.ceil(bias * bias_half_life));
-    placeHorisontalRoad(x, y, x_prev, y_prev, depth - 1, direction = 1, bias = Math.ceil(bias * bias_half_life));
+    return adjacentCount;
 }
-
-function placeHorisontalRoad(x, y, x_prev, y_prev, depth, direction = 0, bias = weight_bias) {
-    if (depth == 0) return; // base case - recursive algorithm
-
-    // check if out of bounds
-    if (y >= gridSize || y < 0) return;
-    if (x >= gridSize || x < 0) return;
-
-    // this decides randomly where we place the horisontal road on the vertical road
-    if ((y_prev > y) && (y + 2 < y_prev - 2)) { 
-        y = biasedRandom(y + 2, y_prev - 2, bias); 
-    } else if ((y_prev < y) && (y - 2 > y_prev + 2)) {
-        y = biasedRandom(y_prev + 2, y - 2, bias); 
-    } else {
-        y = y
-    }
-
-    // making sure we are within the grid still.
-    y = Math.max(0, Math.min(y, gridSize - 1));
-    y_prev = y;
-
+// this function make sures that no roads can spawn adjacent to each other. 
+// however some roads still does that
+function calculateAdjacentRoadsForHorisontalLines(x,y,grid,direction, gridSize) {
     let adjacentCount = 0; // To keep track of adjacent road cells
 
-    // this function make sures that no roads can spawn adjacent to each other. 
-    // however some roads still does that
     for (let j = 1; j < line_segment_size; j++) {
         if (direction == 0) { // Checks backward direction along x-axis
             if (x - j < 0 || x - j >= gridSize) break;
@@ -169,22 +93,100 @@ function placeHorisontalRoad(x, y, x_prev, y_prev, depth, direction = 0, bias = 
 
         }
     }
+    return adjacentCount;
+}
+
+function populateArray(grid, x, y, gridSize, line_segment_size, direction, axis) {
+
+    for (let j = 1; j < line_segment_size; j++) {
+        // Check if we are out of grid bounds and break if so.
+        if ((axis === 'x' && (x >= gridSize || x < 0)) || (axis === 'y' && (y >= gridSize || y < 0))) {
+            break;
+        }
+
+        grid[y][x] = 1; // Place the road
+
+        // Update the position based on direction and axis.
+        if (axis === 'x') {
+            direction === 0 ? x-- : x++;
+        } else {
+            direction === 0 ? y-- : y++;
+        }
+
+        // Check if the next position is out of bounds or if it would overwrite another road.
+        if (((axis === 'x' && (x < 0 || x >= gridSize)) || (axis === 'y' && (y < 0 || y >= gridSize))) || grid[y][x] === 1) {
+            break;
+        }
+    }
+    return [grid, x, y]
+}
+
+function populateGridWithRoadsRecursively(x, y, x_prev, y_prev, depth) {
+    placeVerticalRoad(x, y, x_prev, y_prev, depth, 0, weight_bias); //  0 means making a line downwards
+    placeVerticalRoad(x, y, x_prev, y_prev, depth, 1, weight_bias); // 1 means making a line upwards
+}
+
+populateGridWithRoadsRecursively(x, y, x_prev, y_prev, iterations_of_Lsystem);
+
+function biasedRandomPlacement(prev, current, bias) {
+    if ((prev > current) && (current + 2 < prev - 2)) {
+        return biasedRandom(current + 2, prev - 2, bias);
+    } else if ((prev < current) && (current - 2 > prev + 2)) {
+        return biasedRandom(prev + 2, current - 2, bias);
+    } else {
+        return current;
+    }
+}
+
+function placeVerticalRoad(x, y, x_prev, y_prev, depth, direction = 0, bias = weight_bias) {
+    if (depth === 0) return; // base case
+    // check if out of bounds
+    if (x >= gridSize || x < 0) return;
+    if (x >= gridSize || x < 0) return;
+
+    // this decides randomly where we place the vertical road on the horisontal road
+    x = biasedRandomPlacement(x_prev, x, bias)
+
+    // making sure we are within the grid still.
+    x = Math.max(0, Math.min(x, gridSize - 1));
+    x_prev = x;
+
+    let adjacentCount = calculateAdjacentRoadsForVerticalLines(x,y,grid,direction, gridSize);
 
     if (adjacentCount > 3) {
-        // console.log("Cannot place line, too many adjacent roads");
         return; // Exit the function if there are more than 3 adjacent road cells
     }
 
     // this draws the line
-    for (let j = 1; j < line_segment_size; j++) {
-        if (x >= gridSize || x <= 0) break; // checks if we are outside the grid
+    [grid,x,y] = populateArray(grid, x, y, gridSize, line_segment_size, direction, "y")
+    
+    // Recursion
+    placeHorisontalRoad(x, y, x_prev, y_prev, depth - 1, direction = 0, bias = Math.ceil(bias * bias_half_life));
+    placeHorisontalRoad(x, y, x_prev, y_prev, depth - 1, direction = 1, bias = Math.ceil(bias * bias_half_life));
+}
 
-        grid[y][x] = 1; // Place the road
+function placeHorisontalRoad(x, y, x_prev, y_prev, depth, direction = 0, bias = weight_bias) {
+    if (depth == 0) return; // base case - recursive algorithm
 
-        if (direction == 0) x--;
-        else x++;
-        if (!(x >= gridSize || x < 0) && grid[y][x] == 1) break; // Stop if overwriting another road
+    // check if out of bounds
+    if (y >= gridSize || y < 0) return;
+    if (x >= gridSize || x < 0) return;
+
+    // this decides randomly where we place the horisontal road on the vertical road
+    y = biasedRandomPlacement(y_prev, y, bias)
+
+    // making sure we are within the grid still.
+    y = Math.max(0, Math.min(y, gridSize - 1));
+    y_prev = y;
+
+    let adjacentCount = calculateAdjacentRoadsForHorisontalLines(x,y,grid,direction, gridSize);
+
+    if (adjacentCount > 3) {
+        return; // Exit the function if there are more than 3 adjacent road cells
     }
+
+    // this draws the line
+    [grid,x,y] = populateArray(grid, x, y, gridSize, line_segment_size, direction, "x")
 
     // Recursion
     placeVerticalRoad(x, y, x_prev, y_prev, depth - 1, direction = 0, bias = Math.ceil(bias * bias_half_life));
@@ -215,8 +217,7 @@ function biasedRandom(lowerBound, upperBound, biasFactor = 2) {
     return Math.floor(biasedRandomNumber);
 }
 
-// Example of usage:
-console.log(biasedRandom(40, 69, 5)); // Most results will be closer to 15
+
 
 function placeBuildings(probability, maxBuildingSize) {
     const center = gridSize / 2; // Calculate center of the grid
