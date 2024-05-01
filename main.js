@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './build/controls/OrbitControls.js';
+import { grid, init_grid} from './grid.js';
 
 // Set up the scene, camera, and renderer
 const scene = new THREE.Scene();
@@ -14,7 +15,7 @@ camera.position.set(0, 50, 100);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
 
-const gridSize = 160;
+export const gridSize = 160;
 // var line_segment_size = Math.floor(3/4*gridSize - 1/4*gridSize);
 var line_segment_size = 10
 var iterations_of_Lsystem = 20;
@@ -27,13 +28,7 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-
-
-// Grid setup
-const grid = [];
-for (let i = 0; i < gridSize; i++) {
-    grid[i] = new Array(gridSize).fill(0);
-}
+init_grid();
 
 // initial start from 1/4 
 var x = Math.floor(grid.length*1/4);
@@ -53,7 +48,8 @@ for (let j = Math.floor(grid.length*1/4); j < Math.floor(grid.length*3/4); j++) 
 } 
 
 
-// console.log(Math.floor(grid.length*1/4));
+
+
 
 function recursive_draw_lines(x, y, x_prev, y_prev,depth) {
     draw_vertical_line(x, y, x_prev, y_prev,depth,0,weight_bias); //  0 means making a line downwards
