@@ -17,11 +17,11 @@ const controls = new OrbitControls(camera, renderer.domElement);
 camera.position.set(0, 50, 100);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-var grid;
+export var grid;
 var grid, x_prev, y_prev;
-export var gridSize = 160;
+var gridSize = 160;
 
-export var line_segment_size = 10
+var line_segment_size = 10
 var iterations_of_Lsystem = 20;
 var weight_bias = 1000;
 var bias_half_life = 0.5;
@@ -36,15 +36,12 @@ function getRandomInt(min, max) {
 }
 
 
+
 grid = init_grid(gridSize);
 
 [grid, x, x_prev, y, y_prev] = initialize_starting_road(grid, gridSize, x, y);
 
-populateGridWithRoadsRecursively(grid,x, y, x_prev, y_prev, iterations_of_Lsystem,weight_bias);
-
-
-
-
+populateGridWithRoadsRecursively(x, y, x_prev, y_prev, iterations_of_Lsystem);
 
 
 // this function make sures that no roads can spawn adjacent to each other. 
@@ -76,6 +73,7 @@ function calculateAdjacentRoadsForVerticalLines(x,y,grid,direction, gridSize) {
 
     return adjacentCount;
 }
+
 // this function make sures that no roads can spawn adjacent to each other. 
 // however some roads still does that
 function calculateAdjacentRoadsForHorisontalLines(x,y,grid,direction, gridSize) {
@@ -102,31 +100,14 @@ function calculateAdjacentRoadsForHorisontalLines(x,y,grid,direction, gridSize) 
 }
 
 function populateArray(grid, x, y, gridSize, line_segment_size, direction, axis) {
-    console.log("grid",grid)
-    console.log("x",x)
-    console.log("y",y)
-    console.log("gridSize",gridSize)
-    console.log("line_segment_size",line_segment_size)
-    console.log("direction",direction)
-    console.log("axis",axis)
 
     for (let j = 1; j < line_segment_size; j++) {
         // Check if we are out of grid bounds and break if so.
         if ((axis === 'x' && (x >= gridSize || x < 0)) || (axis === 'y' && (y >= gridSize || y < 0))) {
             break;
         }
-        console.log("hit1")
-        console.log("x",x,"y",y)
-        grid[y][x] = 1; // Place the road
-        
-        console.log("Attempting to access grid at y:", y, "x:", x);
-        if (!grid[y]) {
-            console.log("Error: grid[y] is undefined, y:", y);
-        } else if (grid[y][x] === undefined) {
-            console.log("Error: grid[y][x] is undefined, x:", x);
-        }
 
-        console.log("hit2")
+        grid[y][x] = 1; // Place the road
 
         // Update the position based on direction and axis.
         if (axis === 'x') {
@@ -139,40 +120,13 @@ function populateArray(grid, x, y, gridSize, line_segment_size, direction, axis)
         if (((axis === 'x' && (x < 0 || x >= gridSize)) || (axis === 'y' && (y < 0 || y >= gridSize))) || grid[y][x] === 1) {
             break;
         }
-        
-
-        console.log("hit3")
     }
-
-    // find positions in the array where grid is 1 nicely using codepilot
-    const positions = [];
-    for (let i = 0; i < grid.length; i++) {
-        for (let j = 0; j < grid[i].length; j++) {
-            if (grid[i][j] === 1) {
-                positions.push({ x: j, y: i });
-            }
-        }
-    }
-    console.log(positions);
-
-
-    console.log("hit4")
-
-    console.log("grid",grid)
-    console.log("x",x)
-    console.log("y",y)
-    console.log("gridSize",gridSize)
-    console.log("line_segment_size",line_segment_size)
-    console.log("direction",direction)
-    console.log("axis",axis)
-    return [grid, x, y];
-    
+    return [grid, x, y]
 }
 
-export function populateGridWithRoadsRecursively(grid, x, y, x_prev, y_prev, depth, weight_bias) {
-    grid = placeVerticalRoad(grid, x, y, x_prev, y_prev, depth, 0, weight_bias); //  0 means making a line downwards
-    grid = placeVerticalRoad(grid, x, y, x_prev, y_prev, depth, 1, weight_bias); // 1 means making a line upwards
-    return grid;
+function populateGridWithRoadsRecursively(x, y, x_prev, y_prev, depth) {
+    placeVerticalRoad(x, y, x_prev, y_prev, depth, 0, weight_bias); //  0 means making a line downwards
+    placeVerticalRoad(x, y, x_prev, y_prev, depth, 1, weight_bias); // 1 means making a line upwards
 }
 
 
@@ -187,11 +141,11 @@ function biasedRandomPlacement(prev, current, bias) {
     }
 }
 
-function placeVerticalRoad(grid, x, y, x_prev, y_prev, depth, direction = 0, bias = weight_bias) {
-    if (depth === 0) return grid; // base case
+function placeVerticalRoad(x, y, x_prev, y_prev, depth, direction = 0, bias = weight_bias) {
+    if (depth === 0) return; // base case
     // check if out of bounds
-    if (x >= gridSize || x < 0) return grid;
-    if (x >= gridSize || x < 0) return grid;
+    if (x >= gridSize || x < 0) return;
+    if (x >= gridSize || x < 0) return;
 
     // this decides randomly where we place the vertical road on the horisontal road
     x = biasedRandomPlacement(x_prev, x, bias)
@@ -203,30 +157,23 @@ function placeVerticalRoad(grid, x, y, x_prev, y_prev, depth, direction = 0, bia
     let adjacentCount = calculateAdjacentRoadsForVerticalLines(x,y,grid,direction, gridSize);
 
     if (adjacentCount > 3) {
-        return grid; // Exit the function if there are more than 3 adjacent road cells
+        return; // Exit the function if there are more than 3 adjacent road cells
     }
 
-    console.log("hit0")
     // this draws the line
-    console.log("grid",grid)
-    console.log("x",x)
-    console.log("y",y)
-    console.log("gridSize",gridSize)
-    console.log("line_segment_size",line_segment_size)
-    console.log("direction",direction)
-    [grid, x, y] = populateArray(grid, x, y, gridSize, line_segment_size, direction, "y");
-    console.log("hit5")
+    [grid,x,y] = populateArray(grid, x, y, gridSize, line_segment_size, direction, "y")
+    
     // Recursion
-    grid = placeHorisontalRoad(grid, x, y, x_prev, y_prev, depth - 1, direction = 0, bias = Math.ceil(bias * bias_half_life));
-    return placeHorisontalRoad(grid, x, y, x_prev, y_prev, depth - 1, direction = 1, bias = Math.ceil(bias * bias_half_life));
+    placeHorisontalRoad(x, y, x_prev, y_prev, depth - 1, direction = 0, bias = Math.ceil(bias * bias_half_life));
+    placeHorisontalRoad(x, y, x_prev, y_prev, depth - 1, direction = 1, bias = Math.ceil(bias * bias_half_life));
 }
 
-function placeHorisontalRoad(grid, x, y, x_prev, y_prev, depth, direction = 0, bias = weight_bias) {
-    if (depth == 0) return grid; // base case - recursive algorithm
+function placeHorisontalRoad(x, y, x_prev, y_prev, depth, direction = 0, bias = weight_bias) {
+    if (depth == 0) return; // base case - recursive algorithm
 
     // check if out of bounds
-    if (y >= gridSize || y < 0) return grid;
-    if (x >= gridSize || x < 0) return grid;
+    if (y >= gridSize || y < 0) return;
+    if (x >= gridSize || x < 0) return;
 
     // this decides randomly where we place the horisontal road on the vertical road
     y = biasedRandomPlacement(y_prev, y, bias)
@@ -238,16 +185,18 @@ function placeHorisontalRoad(grid, x, y, x_prev, y_prev, depth, direction = 0, b
     let adjacentCount = calculateAdjacentRoadsForHorisontalLines(x,y,grid,direction, gridSize);
 
     if (adjacentCount > 3) {
-        return grid; // Exit the function if there are more than 3 adjacent road cells
+        return; // Exit the function if there are more than 3 adjacent road cells
     }
 
     // this draws the line
-    var [grid,x,y] = populateArray(grid, x, y, gridSize, line_segment_size, direction, "x");
+    [grid,x,y] = populateArray(grid, x, y, gridSize, line_segment_size, direction, "x")
 
     // Recursion
-    grid = placeVerticalRoad(grid, x, y, x_prev, y_prev, depth - 1, direction = 0, bias = Math.ceil(bias * bias_half_life));
-    return placeVerticalRoad(grid, x, y, x_prev, y_prev, depth - 1, direction = 1, bias = Math.ceil(bias * bias_half_life));
+    placeVerticalRoad(x, y, x_prev, y_prev, depth - 1, direction = 0, bias = Math.ceil(bias * bias_half_life));
+    placeVerticalRoad(x, y, x_prev, y_prev, depth - 1, direction = 1, bias = Math.ceil(bias * bias_half_life));
 }
+
+
 
 
 function biasedRandom(lowerBound, upperBound, biasFactor = 2) {
@@ -270,6 +219,7 @@ function biasedRandom(lowerBound, upperBound, biasFactor = 2) {
 
     return Math.floor(biasedRandomNumber);
 }
+
 
 
 

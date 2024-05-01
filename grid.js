@@ -1,5 +1,5 @@
 
-import { gridSize, line_segment_size } from './main.js';
+// import { gridSize, line_segment_size } from './main.js';
 
 
 // Grid setup
@@ -26,5 +26,3 @@ export function initialize_starting_road(grid, grid_Size, x, y) {
 
     return [grid, x, x_prev, y, y_prev];
 }
-
-
