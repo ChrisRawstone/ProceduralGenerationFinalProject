@@ -1,22 +1,16 @@
 import * as THREE from 'three';
 import { OrbitControls } from './build/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// Set up the scene, camera, and renderer.
+// Set up the scene, camera, and renderer
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+renderer.setClearColor(new THREE.Color(0x87CEEB)); // Light blue background
 
-renderer.setClearColor(new THREE.Color(0x87CEEB));
-// Add orbit controls to the camera.
-var controls = new OrbitControls(camera, renderer.domElement);
-
-// Set the camera position to (50, 50, 50).
-camera.position.set(50, 50, 50);
-
-// Make the camera look at the origin (0, 0, 0).
+const controls = new OrbitControls(camera, renderer.domElement);
+camera.position.set(0, 50, 100);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
 
@@ -93,42 +87,261 @@ function draw_vertical_line(x, y, x_prev, y_prev, depth, direction = 0,bias=weig
         x=x
     }
 
-    init() {
-        var generating = true;
-        const size = 5;  // Size of each cube
-        while (generating) {
-            for (let i = 0; i < this.scale; i++) {
-                for (let j = 0; j < this.scale; j++) {
-                    const geometry = new THREE.BoxGeometry(size, size, size);
-                    const buildingBlock = new THREE.Mesh(geometry, this.material);
-                    const outlineGeometry = new THREE.BoxGeometry(size * 1.1, size * 1.1, size * 1.1);
-                    const outlineMesh = new THREE.Mesh(outlineGeometry, this.outlineMaterial);
+    // console.log("x_prev:",x_prev,"x:",x)
+    // console.log("y_prev:",y_prev,"y:",y)
 
-                    buildingBlock.position.set(this.x + i * size, this.y, this.z + j * size);
-                    outlineMesh.position.set(this.x + i * size, this.y, this.z + j * size);
+    x = Math.max(0, Math.min(x, gridSize - 1));
+    x_prev = x;
 
-                    scene.add(buildingBlock);
-                    scene.add(outlineMesh);
+    let adjacentCount = 0; // Counter for adjacent road cells
+  
+    for (let j = 1; j < line_segment_size; j++) {
+        
+        if (direction == 0) { // Moving downwards!!
+            if (y-j < 0 || y-j >= gridSize)  break;
+            // grid[y-j][x]=3;
+            // Check both left and right sides of the proposed line
+            if (x + 1 < gridSize && grid[y - j][x + 1] == 1) adjacentCount++; 
+            if (x - 1 >= 0 && grid[y - j][x - 1] == 1) adjacentCount++; 
+
+            
+            // Stop if overwriting another road or out of bounds
+            if (!(y-j < gridSize && y-j >= 0) && grid[y-j][x] == 1)  break;
+        } else { // Moving upwards!!
+            if (y+j >= gridSize || y+j < 0) break;
+    
+            // Check both left and right sides of the proposed line
+            // grid[y+j][x]=3;
+            if (x + 1 < gridSize && grid[y + j][x + 1] == 1) adjacentCount++;
+            if (x - 1 >= 0 && grid[y + j][x - 1] == 1) adjacentCount++;
+            
+            // Stop if overwriting another road or out of bounds
+            if (!(y+j < gridSize && y+j >= 0) && grid[y+j][x] == 1)  break;
+        }
+    }
+    
+    if (adjacentCount > 3) {
+        console.log("Cannot place line, too many adjacent roads");
+        return; // Exit the function if there are more than 3 adjacent road cells
+    }
+    
+
+    for (let j = 1; j < line_segment_size; j++) {
+        if (y >= gridSize || y < 0) break;
+
+        grid[y][x] = 1; // Place the road
+
+        if (direction === 0) y--;
+        else y++;
+
+        // Stop if overwriting another road or out of bounds
+        if (!(y < gridSize && y >= 0) || grid[y][x] == 1) break; 
+    }
+    // console.log("x_prev:",x_prev,"x:",x)
+    // console.log("y_prev:",y_prev,"y:",y)
+    // console.log("bias",bias)
+    draw_horizontal_line(x, y, x_prev, y_prev, depth - 1, direction = 0,bias = Math.ceil(bias*bias_half_life));
+    draw_horizontal_line(x, y, x_prev, y_prev, depth - 1, direction = 1,bias = Math.ceil(bias*bias_half_life));
+}
+
+    function draw_horizontal_line(x, y, x_prev, y_prev, depth, direction = 0,bias = weight_bias) {
+        if (depth == 0) return;
+
+        // check if out of bounds
+        if (y >= gridSize || y < 0) return;
+        if (x >= gridSize || x < 0) return;
+
+
+        // console.log("horisontal_line")
+        // console.log("bias",bias)
+        // console.log("x_prev:",x_prev,"x:",x)
+        // console.log("y_prev:",y_prev,"y:",y)
+        // console.log("bias:",biasedRandom(y_prev, y, bias));
+
+ 
+        if ((y_prev > y) && (y+2 < y_prev-2)) {
+            // console.log("first:", "y+2: ub:", y-2, "y_prev-2: lb:",y_prev-2)
+            y = biasedRandom(y+2, y_prev-2, bias); // this should proably be opposite?
+        } else if ((y_prev < y) && (y-2 > y_prev+2)) { 
+            // console.log("second:", "y_prev+2: lb:", y_prev+2, "y-2: ub:",y-2)
+            // console.log("bias:", biasedRandom(y-2, y_prev+2,bias))
+            y = biasedRandom(y_prev+2, y-2,bias); // this I think works
+        } else {
+            console.log("special case")
+            y=y
+        }
+
+        // console.log("x_prev:",x_prev,"x:",x)
+        // console.log("y_prev:",y_prev,"y:",y)
+
+        y = Math.max(0, Math.min(y, gridSize - 1));
+        y_prev = y;
+    
+        let adjacentCount = 0; // To keep track of adjacent road cells
+
+    
+        for (let j = 1; j < line_segment_size; j++) {
+            if (direction == 0) { // Checks backward direction along x-axis
+                if (x-j < 0 || x-j >= gridSize) break;
+                if (y + 1 < gridSize && grid[y + 1][x - j] == 1) adjacentCount++;
+                if (y - 1 >= 0 && grid[y - 1][x - j] == 1) adjacentCount++;
+
+                if (!(x-j >= gridSize || x-j < 0) && grid[y][x-j] == 1) break; // Stop if overwriting another road
+            } else { // Checks forward direction along x-axis
+                if (x+j >= gridSize || x+j < 0) break;
+                if (y + 1 < gridSize && grid[y + 1][x + j] == 1) adjacentCount++;
+                if (y - 1 >= 0 && grid[y - 1][x + j] == 1) adjacentCount++;
+
+                // console.log("x:",x,"y:",y)
+                if (!(x+j >= gridSize || x+j < 0) && grid[y][x+j] == 1) break; // Stop if overwriting another road
+                
+            }
+        }
+    
+        if (adjacentCount > 3) {
+            console.log("Cannot place line, too many adjacent roads");
+            return; // Exit the function if there are more than 3 adjacent road cells
+        }
+    
+        for (let j = 1; j < line_segment_size; j++) {
+            if (x >= gridSize || x <= 0) break; // checks if we are outside the grid
+    
+            grid[y][x] = 1; // Place the road
+    
+            if (direction == 0) x--;
+            else x++;
+    
+            if (!(x >= gridSize || x < 0) && grid[y][x] == 1) break; // Stop if overwriting another road
+        }
+        
+        // console.log("x_prev:",x_prev,"x:",x)
+        // console.log("y_prev:",y_prev,"y:",y)
+        draw_vertical_line(x, y, x_prev, y_prev, depth - 1, direction = 0,bias = Math.ceil(bias*bias_half_life)); 
+        draw_vertical_line(x, y, x_prev, y_prev, depth - 1, direction = 1,bias = Math.ceil(bias*bias_half_life));
+    }
+
+
+// Calculate the percentage of 1s
+const countOfOnes = grid.flat().filter(value => value === 1).length;
+const totalCells = gridSize * gridSize;
+const percentageOfOnes = (countOfOnes / totalCells) * 100;
+
+// Print the result
+console.log(`Percentage of fields with 1: ${percentageOfOnes.toFixed(2)}%`);
+
+// grid[29][20] = 3;
+
+function biasedRandom(lowerBound, upperBound, biasFactor = 2) {
+    // Validate the input to ensure lowerBound is less than upperBound
+    if (lowerBound >= upperBound) {
+        throw new Error("Lower bound must be less than upper bound.");
+    }
+
+    let sum = 0;
+    // Summing up 'biasFactor' amount of random numbers to skew the distribution towards the middle
+    for (let i = 0; i < biasFactor; i++) {
+        sum += Math.random();
+    }
+
+    // Average the sum to get a skewed random number
+    let avgRandom = sum / biasFactor;
+
+    // Scale and adjust the random number to fit within the bounds
+    let biasedRandomNumber = lowerBound + avgRandom * (upperBound - lowerBound);
+
+    return Math.floor(biasedRandomNumber);
+}
+
+// Example of usage:
+console.log(biasedRandom(40, 69,5)); // Most results will be closer to 15
+
+function placeBuildings(probability, maxBuildingSize) {
+    const center = gridSize / 2; // Calculate center of the grid
+
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            if (grid[i][j] === 0) {
+                if (Math.random() < probability) {
+                    // Start with the smallest building size
+                    let buildingSize = 1;
+                    let distanceFromCenter = Math.sqrt((center - i) ** 2 + (center - j) ** 2); // Euclidean distance from the center
+
+                    // Modify probability based on distance from center
+                    // Closer to center has a higher chance to increase building size
+                    let buildingSizeProbability = 0.5 * (1 - distanceFromCenter / center);
+
+                    while (buildingSize < maxBuildingSize && Math.random() < buildingSizeProbability) {
+                        buildingSize++;
+                    }
+
+                    // Check if the building can be placed
+                    if (canPlaceBuilding(i, j, buildingSize)) {
+                        for (let k = 0; k < buildingSize; k++) {
+                            for (let l = 0; l < buildingSize; l++) {
+                                if ((i + k < gridSize) && (j + l < gridSize)) {
+                                    grid[i + k][j + l] = 2; // Mark the grid cell as occupied by the building
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            this.y += size;  // Increase y for the next layer of cubes
-            generating = Math.random() > 0.1;  // Randomly decide if another layer should be added
         }
     }
 }
 
-// Function to generate random coordinates
-function getRandomCoord() {
-    return Math.floor(Math.random() * 100 - 50);  // Range from -50 to 50
+
+// Function to check if a building can be placed
+function canPlaceBuilding(x, y, size) {
+    // Check grid boundaries
+    if (x + size > gridSize || y + size > gridSize) {
+        return false;
+    }
+    
+    // Check if adjacent to a road
+    let adjacentRoad = false;
+    const checkPositions = [
+        [x - 1, y], [x + size, y], [x, y - 1], [x, y + size],  // Check edges
+        [x - 1, y - 1], [x + size, y - 1], [x - 1, y + size], [x + size, y + size]  // Check corners
+    ];
+
+    for (const [checkX, checkY] of checkPositions) {
+        if (checkX >= 0 && checkX < gridSize && checkY >= 0 && checkY < gridSize && grid[checkX][checkY] === 1) {
+            adjacentRoad = true;
+            break;
+        }
+    }
+
+    if (!adjacentRoad) {
+        return false;
+    }
+
+    // Ensure the space is available and has at least one empty space or road around it
+    for (let i = Math.max(x - 1, 0); i <= Math.min(x + size, gridSize - 1); i++) {
+        for (let j = Math.max(y - 1, 0); j <= Math.min(y + size, gridSize - 1); j++) {
+            if (i < x || i >= x + size || j < y || j >= y + size) { // Only check the buffer zone
+                if (grid[i][j] === 2) { // If there is another building in the buffer
+                    return false;
+                }
+            } else if (grid[i][j] !== 0) { // Check the building area
+                return false;
+            }
+        }
+    }
+
+    return true; // Valid position for a building
 }
 
-// Generate multiple buildings with increasing scale factors
-// Adjust probability of building generation based on the scale
-for (let i = 0; i < 10; i++) {  // Increased loop count for demonstration
-    let scale = i + 1;
-    // Decreasing probability of generating a building with a larger base layer
-    if (Math.random() < Math.exp(-0.01 * scale)) {
-        new Building(getRandomCoord(), 0, getRandomCoord(), scale);
+function placeTrees(treeProbability) {
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            if (grid[i][j] === 0 && Math.random() < treeProbability) { // Check if the space is empty and random chance
+                // Check adjacent cells
+                if (canPlaceTree(i, j)) {
+                    grid[i][j] = 4; // Place a tree
+                }
+            }
+        }
     }
 }
 
@@ -319,7 +532,7 @@ addBuildings();
 // Render loop
 function animate() {
     requestAnimationFrame(animate);
-    controls.update(); 
     renderer.render(scene, camera);
+    controls.update();
 }
 animate();
