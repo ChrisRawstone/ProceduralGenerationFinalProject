@@ -371,11 +371,14 @@ export function createCanvas(grid,gridSize, scene) {
 
     // Define colors for different types of grid cells
     const colors = {
-        0: new THREE.Color(0, 0, 0), // Empty space
+        0: new THREE.Color(0.6, 0.4, 0.2), // Empty space
         1: new THREE.Color(1, 1, 1), // Road (white)
         2: new THREE.Color(0, 0, 1),  // Building (blue)
         3: new THREE.Color(1, 0.5, 0),  // Super Market (orange)
         4: new THREE.Color(0, 0.5, 0), // Trees (Dark green)
+        5: new THREE.Color(0.6, 0.4, 0.2), // Brown
+
+
     };
 
     for (let i = 0; i < gridSize; i++) {

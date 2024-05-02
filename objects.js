@@ -13,21 +13,26 @@ export function addBuildings(grid, gridSize, scene) {
         for (let j = 0; j < gridSize; j++) {
             const key = `${i},${j}`;
             if (grid[i][j] === 2 && !processed.has(key)) {
-                // Find contiguous building cells
-                const size = getBuildingSize(grid, i, j, processed, gridSize);
-                const baseHeight = 1; // Minimum building height
-                const randomHeight = baseHeight + Math.random() * size * 2; // Random height influenced by building size
+                // Detect entire cluster of contiguous 2's
+                const { minI, maxI, minJ, maxJ, count } = getClusterBounds(grid, i, j, processed, gridSize);
+                const clusterWidth = maxJ - minJ + 1;
+                const clusterHeight = maxI - minI + 1;
+                const clusterCenterX = (minJ + maxJ) / 2;
+                const clusterCenterY = (minI + maxI) / 2;
+                const distanceToCenter = Math.max(Math.abs(clusterCenterY - gridSize / 2), Math.abs(clusterCenterX - gridSize / 2));
+                const proximityScale = (gridSize / 2 - distanceToCenter) / (gridSize / 2); // Scaled 0-1, 1 is closest to center
+                const randomHeight = 1 + Math.random() * Math.sqrt(count) * proximityScale * 2; // Height based on cluster size and center proximity
 
-                const cubeGeometry = new THREE.BoxGeometry(cellSize * size, randomHeight, cellSize * size);
+                const cubeGeometry = new THREE.BoxGeometry(cellSize * clusterWidth, randomHeight, cellSize * clusterHeight);
                 const building = new THREE.Mesh(cubeGeometry, buildingMaterial);
-                building.position.set((j + size / 2 - 0.5) * cellSize - 0.5 * gridSize, randomHeight / 2, (i + size / 2 - 0.5) * cellSize - 0.5 * gridSize);
-                building.castShadow = true; // Buildings cast shadows
-                building.receiveShadow = true; // Buildings receive shadows
+                building.position.set((clusterCenterX - gridSize / 2 ) * cellSize, randomHeight / 2, (clusterCenterY - gridSize / 2 ) * cellSize);
+                building.castShadow = true;
+                building.receiveShadow = true;
                 scene.add(building);
 
                 // Add outline
-                const outlineScale = 1.05; // How much larger the outline is
-                const outlineGeometry = new THREE.BoxGeometry(cellSize * size * outlineScale, randomHeight * outlineScale, cellSize * size * outlineScale);
+                const outlineScale = 1.05;
+                const outlineGeometry = new THREE.BoxGeometry(cellSize * clusterWidth * outlineScale, randomHeight * outlineScale, cellSize * clusterHeight * outlineScale);
                 const outlineMesh = new THREE.Mesh(outlineGeometry, outlineMaterial);
                 outlineMesh.position.copy(building.position);
                 scene.add(outlineMesh);
@@ -36,22 +41,32 @@ export function addBuildings(grid, gridSize, scene) {
     }
 }
 
+export function getClusterBounds(grid, startI, startJ, processed, gridSize) {
+    const queue = [[startI, startJ]];
+    let minI = gridSize, maxI = 0, minJ = gridSize, maxJ = 0;
 
-
-
-
-export function getBuildingSize(grid, startI, startJ, processed, gridSize) {
-    let size = 1;
-    // Expand in the j (x) direction
-    while (startJ + size < gridSize && grid[startI][startJ + size] === 2 && !processed.has(`${startI},${startJ + size}`)) {
-        size++;
+    while (queue.length > 0) {
+        const [i, j] = queue.shift();
+        if (processed.has(`${i},${j}`) || grid[i][j] !== 2) continue;
+        processed.add(`${i},${j}`);
+        minI = Math.min(minI, i);
+        maxI = Math.max(maxI, i);
+        minJ = Math.min(minJ, j);
+        maxJ = Math.max(maxJ, j);
+        // Check neighbors
+        [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]].forEach(([ni, nj]) => {
+            if (ni >= 0 && ni < gridSize && nj >= 0 && nj < gridSize && grid[ni][nj] === 2 && !processed.has(`${ni},${nj}`)) {
+                queue.push([ni, nj]);
+            }
+        });
     }
-    // Mark cells as processed
-    for (let x = startJ; x < startJ + size; x++) {
-        processed.add(`${startI},${x}`);
-    }
-    return size;
+    return {
+        minI, maxI, minJ, maxJ,
+        count: (maxI - minI + 1) * (maxJ - minJ + 1) // Total number of cells in the cluster
+    };
 }
+
+
 
 
 export function addTrees(grid, gridSize, scene) {

@@ -66,7 +66,6 @@ createCanvas(grid,gridSize,scene);
 
 
 
-
 // These are placing Three.js objects in the scene
 addTrees(grid, gridSize, scene);
 addSupermarkets(grid, gridSize, scene);
