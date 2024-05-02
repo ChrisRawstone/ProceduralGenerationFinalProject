@@ -35,17 +35,21 @@ light.shadow.camera.bottom = -50;
 scene.add(light);
 
 
-
+// Parameters for City Generation
 var grid;
 var x_prev, y_prev;
 
-var gridSize = 160;
-var line_segment_size = 20;
-var iterations_of_Lsystem = 5;
-var weight_bias = 100;
-var bias_half_life = 1;
+var gridSize = 160; // this determines the map size
+var line_segment_size = 20; // this will make longer roads if it is higher
+var iterations_of_Lsystem = 5; // the higher this value is the more roads will be generated
+var weight_bias = 100; // the higher this value is the symmetric the roads will be. This can be anywhere from 0 to 10000
+var bias_half_life = 0.5; // the lower this value is the less symetric the roads will be from the middle. This can be anywhere from 0 to 1
 
+var probability_of_supermarket = 0.005; // this is the probability of a supermarket being placed on a cell
+var probability_of_building = 0.9; // this is the probability of a building being placed on a cell
+var probability_of_tree = 0.15; // this is the probability of a tree being placed on a cell
 
+// Starting positions of the first road - if you are unsure of what to put here, just leave it as is
 var x = Math.floor(gridSize * 1 / 4);
 var y = Math.floor(gridSize / 2);
 
@@ -57,9 +61,9 @@ grid = init_grid(gridSize);
 populateGridWithRoadsRecursively(grid, x, y, x_prev, y_prev, iterations_of_Lsystem, gridSize, line_segment_size, weight_bias, bias_half_life);
 
 // this is placing buildings, trees, and supermarkets on the grid
-placeSupermarkets(grid,gridSize, 0.005);
-placeBuildings(grid,gridSize,0.9, 5);
-placeTrees(grid,gridSize,0.15);
+placeSupermarkets(grid,gridSize, probability_of_supermarket);
+placeBuildings(grid,gridSize,probability_of_building, 5);
+placeTrees(grid,gridSize,probability_of_tree);
 
 // this is visualizing the grid
 createCanvas(grid,gridSize,scene);
