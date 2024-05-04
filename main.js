@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './build/controls/OrbitControls.js';
-
+import {loadModel,getRandomTreeIndex} from './Importing_gltf.js';
 // Set up the scene, camera, and renderer
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -12,7 +12,6 @@ renderer.setClearColor(new THREE.Color(0x87CEEB)); // Light blue background
 const controls = new OrbitControls(camera, renderer.domElement);
 camera.position.set(0, 50, 100);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
-
 
 const gridSize = 160;
 // var line_segment_size = Math.floor(3/4*gridSize - 1/4*gridSize);
@@ -522,6 +521,12 @@ function addSupermarkets() {
         }
     }
 }
+//Loading Trees models Here
+const randomTreeIndex = getRandomTreeIndex();
+console.log(randomTreeIndex)
+
+loadModel(randomTreeIndex,scene);
+
 
 
 addTrees();
