@@ -3,6 +3,7 @@ import { OrbitControls } from './build/controls/OrbitControls.js';
 import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets, createCanvas} from './grid.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {addTrees, addSupermarkets, addBuildings} from './objects.js';
+import { getRandomTreeIndex,loadModel } from './Importing_gltf.js';
 
 console.log("hey");
 
