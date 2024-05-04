@@ -1,10 +1,17 @@
 import * as THREE from 'three';
 import { OrbitControls } from './build/controls/OrbitControls.js';
-import {loadModel,getRandomTreeIndex} from './Importing_gltf.js';
+import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets, createCanvas} from './grid.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import {addTrees, addSupermarkets, addBuildings} from './objects.js';
+
+console.log("hey");
+
 // Set up the scene, camera, and renderer
-const scene = new THREE.Scene();
+var scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
+renderer.shadowMap.enabled = true; // Enable shadow maps in the renderer
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optional: Use PCF soft shadows for better shadow quality
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 renderer.setClearColor(new THREE.Color(0x87CEEB)); // Light blue background
@@ -12,6 +19,7 @@ renderer.setClearColor(new THREE.Color(0x87CEEB)); // Light blue background
 const controls = new OrbitControls(camera, renderer.domElement);
 camera.position.set(0, 50, 100);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
+
 
 const gridSize = 160;
 // var line_segment_size = Math.floor(3/4*gridSize - 1/4*gridSize);
@@ -521,12 +529,6 @@ function addSupermarkets() {
         }
     }
 }
-//Loading Trees models Here
-const randomTreeIndex = getRandomTreeIndex();
-console.log(randomTreeIndex)
-
-loadModel(randomTreeIndex,scene);
-
 
 
 addTrees();
