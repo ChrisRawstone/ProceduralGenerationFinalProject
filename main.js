@@ -26,7 +26,9 @@ camera.lookAt(new THREE.Vector3(0, 0, 0));
 
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
 scene.add(ambientLight);
-// this is adding shadows to the scene 
+
+
+// this is adding shadows to the scene . you can turn off by commenting out this line
 addShadows(scene);
 
 const cubeTextureLoader = new THREE.CubeTextureLoader();
@@ -36,26 +38,6 @@ const skyboxTexture = cubeTextureLoader.load([
     'bottom.jpg', 'front.jpg', 'back.jpg'
 ]);
 scene.background = skyboxTexture;
-
-// Load your panoramic image and set it as the background
-// const loader = new THREE.TextureLoader();
-// loader.load('Textures/MountainView1.jpg', function (texture) {
-//     // Assuming the image is an equirectangular panorama
-//     texture.mapping = THREE.EquirectangularReflectionMapping;
-//     scene.background = texture;
-// });
-
-// const loader = new THREE.CubeTextureLoader();
-// const texture = loader.load([
-//     'Textures/MountainView1.jpg', // positive X
-//     'Textures/MountainView1.jpg', // negative X
-//     'Textures/MountainView1.jpg', // positive Y
-//     'Textures/MountainView1.jpg', // negative Y
-//     'Textures/MountainView1.jpg', // positive Z
-//     'Textures/MountainView1.jpg'  // negative Z
-// ]);
-
-// scene.background = texture;
 
 
 

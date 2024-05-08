@@ -234,9 +234,9 @@ export function addShadows(scene) {
 
     scene.add(directionalLight);
 
-    const lightHelper = new THREE.DirectionalLightHelper(directionalLight);
-    scene.add(lightHelper);
+    // const lightHelper = new THREE.DirectionalLightHelper(directionalLight);
+    // scene.add(lightHelper);
 
-    const shadowHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
-    scene.add(shadowHelper);
+    // const shadowHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+    // scene.add(shadowHelper);
 }
