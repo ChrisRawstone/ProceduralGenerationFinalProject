@@ -1,9 +1,11 @@
 import * as THREE from 'three';
-import { getRandomTreeIndex,loadModel } from './Importing_gltf.js';
+import { loadModel } from './Importing_gltf.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export function addBuildings(grid, gridSize, scene) {
     const cellSize = 1;
-    const buildingMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(0, 0, 1), side: THREE.DoubleSide }); // Blue for buildings
+    const buildingTexture = new THREE.TextureLoader().load('Textures/building_night_texture.jpg');
+    const buildingMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(0, 0, 1)}); // Blue for buildings
     const outlineMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(1, 1, 1), side: THREE.BackSide }); // White outline
     outlineMaterial.transparent = true;
     outlineMaterial.opacity = 0.5; // Adjust transparency as needed
@@ -68,6 +70,59 @@ export function getClusterBounds(grid, startI, startJ, processed, gridSize) {
 
 
 
+const trees = [
+    'tree1',
+    'tree2',
+    'oak_trees',
+    'tree4'
+    // Add more tree paths as needed
+];
+
+const preloadedTrees = {}; // Object to hold preloaded models
+
+export function preloadTrees(scene, callback) {
+    let loadedCount = 0;
+
+    function onLoad() {
+        loadedCount++;
+        if (loadedCount === trees.length) {
+            callback(); // All models loaded
+        }
+    }
+
+    function loadModel(path, callback) {
+        // const loader = new THREE.GLTFLoader(); // Assuming you're using GLTF format
+        var loader = new GLTFLoader();
+        loader.load(
+            path,
+            (gltf) => {
+                const model = gltf.scene;
+                model.traverse((node) => {
+                    if (node.isMesh) {
+                        node.castShadow = true;
+                        node.receiveShadow = true;
+                    }
+                    
+                });
+                preloadedTrees[path] = model;
+                callback();
+            },
+            undefined,
+            (error) => {
+                console.error(`Error loading model: ${path}`, error);
+                callback();
+            }
+        );
+    }
+
+    trees.forEach((treePath) => {
+        loadModel(`models/${trees[3]}/scene.gltf`, onLoad);
+    });
+}
+
+function getRandomTreeIndex() {
+    return Math.floor(Math.random() * trees.length);
+}
 
 export function addTrees(grid, gridSize, scene) {
     const cellSize = 1;
@@ -75,26 +130,29 @@ export function addTrees(grid, gridSize, scene) {
     const treeRadius = 0.2; // Radius of the tree's trunk
     const treeGeometry = new THREE.CylinderGeometry(treeRadius, treeRadius, treeHeight, 16); // Create a cylinder to represent trees
     const treeMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(0, 0.5, 0) }); // Dark green for trees
-   
-   //gltf
-    // var index=getRandomTreeIndex()
-    // loadModel(index,scene);
-
-
+    
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
             if (grid[i][j] === 4) {  // Check if the cell type is for a tree
-                const tree = new THREE.Mesh(treeGeometry, treeMaterial);
-                var index=getRandomTreeIndex()
-               // loadModel(index,scene,j - 0.5 * gridSize, (treeHeight / 2)-1, i - 0.5 * gridSize,0.5)
-                tree.position.set(j - 0.5 * gridSize, treeHeight / 2, i - 0.5 * gridSize);  // Position the tree so it stands upright
-                // tree.castShadow = true; // Buildings cast shadows
-                // tree.receiveShadow = true; // Buildings receive shadows
-                scene.add(tree);
+                const treeIndex = getRandomTreeIndex();
+                // const treePath = trees[treeIndex];
+                const originalModel = preloadedTrees[`models/${trees[3]}/scene.gltf`];
+                if (originalModel) {
+                    const newTree = originalModel.clone(); // Clone the preloaded tree model
+                    newTree.position.set(j - 0.5 * gridSize, (treeHeight / 2)-1, i - 0.5 * gridSize);
+                    newTree.scale.set(0.5, 0.5, 0.5); // Scale if needed
+                    scene.add(newTree);
+                } else {
+                    // Fallback to a cylinder if the model is not loaded
+                    const fallbackTree = new THREE.Mesh(treeGeometry, treeMaterial);
+                    fallbackTree.position.set(j - 0.5 * gridSize, treeHeight / 2, i - 0.5 * gridSize);
+                    scene.add(fallbackTree);
+                }
             }
         }
     }
 }
+
 
 export function addSupermarkets(grid, gridSize, scene) {
     const cellSize = 1;
