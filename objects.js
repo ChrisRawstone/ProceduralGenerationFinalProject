@@ -1,29 +1,5 @@
 import * as THREE from 'three';
 import { getRandomTreeIndex,loadModel } from './Importing_gltf.js';
-// Make a tree 
-// const trunkGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 8);
-
-// // Create trunk material
-// const trunkMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
-
-// // Create trunk mesh
-// const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-
-// // Create leaves geometry
-// const leavesGeometry = new THREE.SphereGeometry(0.5, 8, 8);
-
-// // Create leaves material
-// const leavesMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-
-// // Create leaves mesh
-// const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
-// leaves.position.y = 1; // Position leaves on top of the trunk
-
-// // Create a group to hold the tree
-// const stupidtree = new THREE.Group();
-// tree.add(trunk); // Add trunk to the tree group
-// tree.add(leaves);
-
 
 export function addBuildings(grid, gridSize, scene) {
     const cellSize = 1;
