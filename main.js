@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from './build/controls/OrbitControls.js';
 import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets} from './grid.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import {addTrees, addSupermarkets, addBuildings, createCanvas, preloadTrees} from './objects.js';
+import {addTrees, addSupermarkets, addBuildings, createCanvas, preloadTrees,addShadows} from './objects.js';
 
 
 console.log("hey");
@@ -11,32 +11,51 @@ console.log("hey");
 var scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
-// renderer.shadowMap.enabled = true; // Enable shadow maps in the renderer
-// renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optional: Use PCF soft shadows for better shadow quality
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 renderer.setClearColor(new THREE.Color(0x87CEEB)); // Light blue background
 
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; // Smoothly damping effect during rotation
+controls.dampingFactor = 0.05;
+
 camera.position.set(0, 50, 100);
 camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-// Set up directional light
-const light = new THREE.DirectionalLight(0xffffff, 2.0);
-light.position.set(-10, 20, 10); // Adjust the position to ensure it's not too far
-// light.castShadow = true;
-// light.shadow.mapSize.width = 2048; // Higher resolution for shadow map
-// light.shadow.mapSize.height = 2048;
-// light.shadow.camera.near = 0.5;
-// light.shadow.camera.far = 500; // Ensure the far plane encompasses all shadow-receiving objects
-// light.shadow.camera.left = -50; // These values might need adjustment
-// light.shadow.camera.right = 50;
-// light.shadow.camera.top = 50;
-// light.shadow.camera.bottom = -50;
-scene.add(light);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+scene.add(ambientLight);
+// this is adding shadows to the scene 
+addShadows(scene);
 
+const cubeTextureLoader = new THREE.CubeTextureLoader();
+cubeTextureLoader.setPath('Textures/skybox/');   
+const skyboxTexture = cubeTextureLoader.load([
+    'right.jpg', 'left.jpg', 'top.jpg',
+    'bottom.jpg', 'front.jpg', 'back.jpg'
+]);
+scene.background = skyboxTexture;
 
+// Load your panoramic image and set it as the background
+// const loader = new THREE.TextureLoader();
+// loader.load('Textures/MountainView1.jpg', function (texture) {
+//     // Assuming the image is an equirectangular panorama
+//     texture.mapping = THREE.EquirectangularReflectionMapping;
+//     scene.background = texture;
+// });
 
+// const loader = new THREE.CubeTextureLoader();
+// const texture = loader.load([
+//     'Textures/MountainView1.jpg', // positive X
+//     'Textures/MountainView1.jpg', // negative X
+//     'Textures/MountainView1.jpg', // positive Y
+//     'Textures/MountainView1.jpg', // negative Y
+//     'Textures/MountainView1.jpg', // positive Z
+//     'Textures/MountainView1.jpg'  // negative Z
+// ]);
+
+// scene.background = texture;
 
 
 
@@ -52,7 +71,9 @@ var bias_half_life = 0.5; // the lower this value is the less symetric the roads
 
 var probability_of_supermarket = 0.005; // this is the probability of a supermarket being placed on a cell
 var probability_of_building = 0.9; // this is the probability of a building being placed on a cell
-var probability_of_tree = 0.01; // this is the probability of a tree being placed on a cell
+var probability_of_tree = 0.05; // this is the probability of a tree being placed on a cell
+
+var scale_of_tree = 0.2; // this is the scale of the tree
 
 // Starting positions of the first road - if you are unsure of what to put here, just leave it as is
 var x = Math.floor(gridSize * 1 / 4);
@@ -87,7 +108,7 @@ createCanvas(grid,gridSize,scene);
 // These are placing Three.js objects in the scene
 // addTrees(grid, gridSize, scene);
 preloadTrees(scene, () => {
-    addTrees(grid, gridSize, scene);
+    addTrees(grid, gridSize, scene,scale_of_tree);
 });
 
 addSupermarkets(grid, gridSize, scene);
