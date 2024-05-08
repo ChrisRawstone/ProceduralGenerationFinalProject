@@ -368,7 +368,6 @@ function countAdjacentRoads(grid, gridSize, x, y) {
 export function createCanvas(grid,gridSize, scene) {
     const cellSize = 1;
     const cellGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
-
     // Define colors for different types of grid cells
     const colors = {
         0: new THREE.Color(0, 0, 0), // Empty space

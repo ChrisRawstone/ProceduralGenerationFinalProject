@@ -3,7 +3,7 @@ import { OrbitControls } from './build/controls/OrbitControls.js';
 import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets, createCanvas} from './grid.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {addTrees, addSupermarkets, addBuildings} from './objects.js';
-import { getRandomTreeIndex,loadModel } from './Importing_gltf.js';
+
 
 console.log("hey");
 
@@ -60,7 +60,7 @@ populateGridWithRoadsRecursively(grid, x, y, x_prev, y_prev, iterations_of_Lsyst
 // this is placing buildings, trees, and supermarkets on the grid
 placeSupermarkets(grid,gridSize, 0.005);
 placeBuildings(grid,gridSize,0.9, 5);
-placeTrees(grid,gridSize,0.15);
+placeTrees(grid,gridSize,0.001);
 
 // this is visualizing the grid
 createCanvas(grid,gridSize,scene);
@@ -72,6 +72,8 @@ createCanvas(grid,gridSize,scene);
 addTrees(grid, gridSize, scene);
 addSupermarkets(grid, gridSize, scene);
 addBuildings(grid, gridSize, scene);
+
+
 
 // Render loop
 function animate() {

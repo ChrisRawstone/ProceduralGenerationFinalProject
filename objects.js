@@ -1,4 +1,28 @@
 import * as THREE from 'three';
+import { getRandomTreeIndex,loadModel } from './Importing_gltf.js';
+// Make a tree 
+// const trunkGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 8);
+
+// // Create trunk material
+// const trunkMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
+
+// // Create trunk mesh
+// const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+
+// // Create leaves geometry
+// const leavesGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+
+// // Create leaves material
+// const leavesMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+
+// // Create leaves mesh
+// const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
+// leaves.position.y = 1; // Position leaves on top of the trunk
+
+// // Create a group to hold the tree
+// const stupidtree = new THREE.Group();
+// tree.add(trunk); // Add trunk to the tree group
+// tree.add(leaves);
 
 
 export function addBuildings(grid, gridSize, scene) {
@@ -60,11 +84,18 @@ export function addTrees(grid, gridSize, scene) {
     const treeRadius = 0.2; // Radius of the tree's trunk
     const treeGeometry = new THREE.CylinderGeometry(treeRadius, treeRadius, treeHeight, 16); // Create a cylinder to represent trees
     const treeMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(0, 0.5, 0) }); // Dark green for trees
+   
+   //gltf
+    // var index=getRandomTreeIndex()
+    // loadModel(index,scene);
+
 
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
             if (grid[i][j] === 4) {  // Check if the cell type is for a tree
                 const tree = new THREE.Mesh(treeGeometry, treeMaterial);
+                var index=getRandomTreeIndex()
+               // loadModel(index,scene,j - 0.5 * gridSize, (treeHeight / 2)-1, i - 0.5 * gridSize,0.5)
                 tree.position.set(j - 0.5 * gridSize, treeHeight / 2, i - 0.5 * gridSize);  // Position the tree so it stands upright
                 tree.castShadow = true; // Buildings cast shadows
                 tree.receiveShadow = true; // Buildings receive shadows
