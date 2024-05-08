@@ -26,8 +26,8 @@ export function addBuildings(grid, gridSize, scene) {
                 const cubeGeometry = new THREE.BoxGeometry(cellSize * clusterWidth, randomHeight, cellSize * clusterHeight);
                 const building = new THREE.Mesh(cubeGeometry, buildingMaterial);
                 building.position.set((clusterCenterX - gridSize / 2 ) * cellSize, randomHeight / 2, (clusterCenterY - gridSize / 2 ) * cellSize);
-                building.castShadow = true;
-                building.receiveShadow = true;
+                // building.castShadow = true;
+                // building.receiveShadow = true;
                 scene.add(building);
 
                 // Add outline
@@ -81,8 +81,8 @@ export function addTrees(grid, gridSize, scene) {
             if (grid[i][j] === 4) {  // Check if the cell type is for a tree
                 const tree = new THREE.Mesh(treeGeometry, treeMaterial);
                 tree.position.set(j - 0.5 * gridSize, treeHeight / 2, i - 0.5 * gridSize);  // Position the tree so it stands upright
-                tree.castShadow = true; // Buildings cast shadows
-                tree.receiveShadow = true; // Buildings receive shadows
+                // tree.castShadow = true; // Buildings cast shadows
+                // tree.receiveShadow = true; // Buildings receive shadows
                 scene.add(tree);
             }
         }
@@ -104,4 +104,38 @@ export function addSupermarkets(grid, gridSize, scene) {
             }
         }
     }
+}
+
+export function createCanvas(grid,gridSize, scene) {
+    const cellSize = 1;
+    const cellGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
+
+    // Define colors for different types of grid cells
+    const colors = {
+        0: new THREE.Color(0.6, 0.4, 0.2), // Empty space
+        1: new THREE.Color(1, 1, 1), // Road (white)
+        2: new THREE.Color(0, 0, 1),  // Building (blue)
+        3: new THREE.Color(1, 0.5, 0),  // Super Market (orange)
+        4: new THREE.Color(0, 0.5, 0), // Trees (Dark green)
+        5: new THREE.Color(0.6, 0.4, 0.2), // Brown
+
+
+    };
+
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            const type = grid[i][j];
+            const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5); // Default color if type is not defined
+            const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
+            const cell = new THREE.Mesh(cellGeometry, material);
+
+            // Rotate each cell individually
+            cell.rotation.x = -Math.PI / 2;
+
+            // Adjust position to center the grid on the xz-plane
+            cell.position.set(j - 0.5 * gridSize, 0, i - 0.5 * gridSize);
+            scene.add(cell);
+        }
+    }
+    return scene
 }
