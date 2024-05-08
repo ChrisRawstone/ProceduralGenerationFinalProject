@@ -5,6 +5,7 @@ export function addBuildings(grid, gridSize, scene) {
     const cellSize = 1;
     const buildingMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(0, 0, 1), side: THREE.DoubleSide }); // Blue for buildings
     const outlineMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(1, 1, 1), side: THREE.BackSide }); // White outline
+    //Add Textures or buildings here -Vaish
     outlineMaterial.transparent = true;
     outlineMaterial.opacity = 0.5; // Adjust transparency as needed
     const processed = new Set(); // To track processed cells
@@ -90,6 +91,8 @@ export function addTrees(grid, gridSize, scene) {
 }
 
 export function addSupermarkets(grid, gridSize, scene) {
+    //Change this to a lake
+    //Use textures if you can
     const cellSize = 1;
     const supermarketHeight = 1.5; // Set a specific height for supermarkets
     const supermarketGeometry = new THREE.BoxGeometry(cellSize, supermarketHeight, cellSize); // Create a cube for supermarkets
