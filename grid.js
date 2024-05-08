@@ -365,33 +365,4 @@ function countAdjacentRoads(grid, gridSize, x, y) {
     return count;
 }
 
-export function createCanvas(grid,gridSize, scene) {
-    const cellSize = 1;
-    const cellGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
-    // Define colors for different types of grid cells
-    const colors = {
-        0: new THREE.Color(0, 0, 0), // Empty space
-        1: new THREE.Color(1, 1, 1), // Road (white)
-        2: new THREE.Color(0, 0, 1),  // Building (blue)
-        3: new THREE.Color(1, 0.5, 0),  // Super Market (orange)
-        4: new THREE.Color(0, 0.5, 0), // Trees (Dark green)
-    };
-
-    for (let i = 0; i < gridSize; i++) {
-        for (let j = 0; j < gridSize; j++) {
-            const type = grid[i][j];
-            const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5); // Default color if type is not defined
-            const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
-            const cell = new THREE.Mesh(cellGeometry, material);
-
-            // Rotate each cell individually
-            cell.rotation.x = -Math.PI / 2;
-
-            // Adjust position to center the grid on the xz-plane
-            cell.position.set(j - 0.5 * gridSize, 0, i - 0.5 * gridSize);
-            scene.add(cell);
-        }
-    }
-    return scene
-}
 
