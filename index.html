@@ -1,24 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<title>My first three.js app</title>
-		<style>
-			body { margin: 0; }
-		</style>
-		
-	</head>
-	<script type="importmap">
-        {
-            "imports": {
-                "three": "./build/three.module.js"
-            }
-        }
-    </script>
-	<body>
-		<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script> -->
 
-		<script type="module" src="main.js"></script>
+<head>
+	<meta charset="utf-8" />
+	<title>My first three.js app</title>
+	<style>
+		body {
+			margin: 0;
+		}
+	</style>
+	<link rel="stylesheet" href="style.css">
+</head>
+<script type="importmap">
+    {
+      "imports": {
+        "three": "./build/three.module.js"
+      }
+    }
+  </script>
+
+<body>
+
+	<script type="module" src="main.js"></script>
+
+	<ul class="controls">
+		<li>
+			<button id="regenerate">Regenerate</button>
+		</li>
+
+		<li>
+			<button id="options">Options</button>
+		</li>
+	</ul>
+
+	<div class="options module hidden">
+		<section>
+			<h3>City Parameters</h3>
+
+			<div class="row">
+				<div class="col col-label">
+					<label for="grid_size">Grid Size</label>
+				</div>
+				<div class="col col-input">
+					<input type="number" name="grid_size" id="gridSize" min="10" value="15" step="5" />
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col col-label">
+					<label for="block_size">Block Size</label>
+				</div>
+				<div class="col col-input">
+					<input type="number" name="block_size" id="blockSize" min="100" value="150" step="5" />
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col col-label">
+					<label for="block_margin">Block Margin</label>
+				</div>
+				<div class="col col-input">
+					<input type="number" name="block_margin" id="blockMargin" min="1" value="10" step="1" />
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col col-label">
+					<label for="block_size">Road Width</label>
+				</div>
+				<div class="col col-input">
+					<input type="number" name="road_width" id="roadWidth" min="10" value="20" step="5" />
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col col-label">
+					<label for="tree_density">Tree Density</label>
+				</div>
+				<div class="col col-input">
+					<input type="number" name="tree_density" id="maximumTreeDensity" min="0" value="70" step="10" />
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col col-label">
+					<label for="min_Building_Height">Minimum Building Height</label>
+				</div>
+				<div class="col col-input">
+					<input type="number" name="min_Building_Height" id="minBuildingHeight" min="0" value="50"
+						step="10" />
+				</div>
+			</div>
+			<div class="row">
+				<div class="col col-label">
+					<label for="max_Building_Height">Maximum Building Height</label>
+				</div>
+				<div class="col col-input">
+					<input type="number" name="max_Building_Height" id="maxBuildingHeight" min="100" value="250"
+						step="10" />
+				</div>
+			</div>
+		</section>
+	</div>
+
+	<script>
+        document.getElementById('regenerate').addEventListener('click', regenerate);
+        document.getElementById('options').addEventListener('click', options);
+    </script>
 	
-	</body>
+</body>
+
 </html>

@@ -84,6 +84,37 @@ addTrees(grid, gridSize, scene);
 addSupermarkets(grid, gridSize, scene);
 addBuildings(grid, gridSize, scene);
 
+ // Whenever the regenerate button is clicked, update our city option variables and
+ // regenerate the scene
+export function regenerate() {
+	   updateCityOptions();
+	   reset();
+	}
+ // This event handles our ability to toggle the visibility of the city options menu.
+ export function options() {
+	   document.querySelector(".options").classList.toggle("hidden");
+	}
+
+  // Update the global city option variables to contain the user input specified within our html page
+ function updateCityOptions() {
+   
+	this.gridSize = document.getElementById("gridSize").value;
+	this.blockSize = document.getElementById("blocSize").value;
+	this.blockMargin = document.getElementById("blockMargin").value;
+	this.roadWidth = document.getElementById("roadWidth").value;
+	this.maximumTreeDensity = document.getElementById("treeDensity").value;
+ }
+
+  // Remove the existing canvas and re-initialize the scene
+  function reset() {
+   
+	var canvas = document.getElementsByTagName("CANVAS")[0];
+	document.body.removeChild(canvas);
+ 
+	init();
+   
+ }
+
 // Render loop
 function animate() {
     requestAnimationFrame(animate);
