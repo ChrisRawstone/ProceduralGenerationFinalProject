@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { OrbitControls } from './build/controls/OrbitControls.js';
 import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets} from './grid.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import {addTrees, addSupermarkets, addBuildings, createCanvas} from './objects.js';
+import {addTrees, addSupermarkets, addBuildings, createCanvas, preloadTrees} from './objects.js';
+
 
 console.log("hey");
 
@@ -35,6 +36,10 @@ light.position.set(-10, 20, 10); // Adjust the position to ensure it's not too f
 scene.add(light);
 
 
+
+
+
+
 // Parameters for City Generation
 var grid;
 var x_prev, y_prev;
@@ -47,7 +52,7 @@ var bias_half_life = 0.5; // the lower this value is the less symetric the roads
 
 var probability_of_supermarket = 0.005; // this is the probability of a supermarket being placed on a cell
 var probability_of_building = 0.9; // this is the probability of a building being placed on a cell
-var probability_of_tree = 0.15; // this is the probability of a tree being placed on a cell
+var probability_of_tree = 0.01; // this is the probability of a tree being placed on a cell
 
 // Starting positions of the first road - if you are unsure of what to put here, just leave it as is
 var x = Math.floor(gridSize * 1 / 4);
@@ -70,9 +75,9 @@ placeSupermarkets(grid,gridSize, probability_of_supermarket);
 placeBuildings(grid,gridSize,probability_of_building, 5);
 placeTrees(grid,gridSize,probability_of_tree);
 
-for (let i = 0; i < gridSize; i++) {
-    console.log(grid[i].join(" "));
-}
+// for (let i = 0; i < gridSize; i++) {
+//     console.log(grid[i].join(" "));
+// }
 
 // this is visualizing the grid
 createCanvas(grid,gridSize,scene);
@@ -80,7 +85,11 @@ createCanvas(grid,gridSize,scene);
 
 
 // These are placing Three.js objects in the scene
-addTrees(grid, gridSize, scene);
+// addTrees(grid, gridSize, scene);
+preloadTrees(scene, () => {
+    addTrees(grid, gridSize, scene);
+});
+
 addSupermarkets(grid, gridSize, scene);
 addBuildings(grid, gridSize, scene);
 

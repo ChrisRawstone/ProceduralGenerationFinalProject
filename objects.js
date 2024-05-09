@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { loadModel } from "./Importing_gltf.js";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";import { loadModel } from './Importing_gltf.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export function addBuildings(grid, gridSize, scene) {
   const cellSize = 1;
