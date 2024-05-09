@@ -39,71 +39,35 @@
 
 			<div class="row">
 				<div class="col col-label">
-					<label for="grid_size">Grid Size</label>
+					Grid Size
 				</div>
 				<div class="col col-input">
-					<input type="number" name="grid_size" id="gridSize" min="10" value="15" step="5" />
+					<input type="number" name="grid_size" id="gridSize" min="10" value="160" step="5" />
 				</div>
 			</div>
 
 			<div class="row">
 				<div class="col col-label">
-					<label for="block_size">Block Size</label>
+					Buildings
 				</div>
 				<div class="col col-input">
-					<input type="number" name="block_size" id="blockSize" min="100" value="150" step="5" />
+					<input type="number" name="number_of_buildings" id="buildingsN" min="0" value="0.9" step="0.05" />
 				</div>
 			</div>
 
 			<div class="row">
 				<div class="col col-label">
-					<label for="block_margin">Block Margin</label>
+					Trees
 				</div>
 				<div class="col col-input">
-					<input type="number" name="block_margin" id="blockMargin" min="1" value="10" step="1" />
-				</div>
-			</div>
-
-			<div class="row">
-				<div class="col col-label">
-					<label for="block_size">Road Width</label>
-				</div>
-				<div class="col col-input">
-					<input type="number" name="road_width" id="roadWidth" min="10" value="20" step="5" />
-				</div>
-			</div>
-
-			<div class="row">
-				<div class="col col-label">
-					<label for="tree_density">Tree Density</label>
-				</div>
-				<div class="col col-input">
-					<input type="number" name="tree_density" id="maximumTreeDensity" min="0" value="70" step="10" />
-				</div>
-			</div>
-
-			<div class="row">
-				<div class="col col-label">
-					<label for="min_Building_Height">Minimum Building Height</label>
-				</div>
-				<div class="col col-input">
-					<input type="number" name="min_Building_Height" id="minBuildingHeight" min="0" value="50"
-						step="10" />
-				</div>
-			</div>
-			<div class="row">
-				<div class="col col-label">
-					<label for="max_Building_Height">Maximum Building Height</label>
-				</div>
-				<div class="col col-input">
-					<input type="number" name="max_Building_Height" id="maxBuildingHeight" min="100" value="250"
-						step="10" />
+					<input type="number" name="number_of_trees" id="treesN" min="0" value="0.01" step="0.01" />
 				</div>
 			</div>
 		</section>
 	</div>
 
-	<script>
+	<script type="module">
+		import { regenerate, options } from './main.js';
         document.getElementById('regenerate').addEventListener('click', regenerate);
         document.getElementById('options').addEventListener('click', options);
     </script>

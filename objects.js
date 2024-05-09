@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { loadModel } from "./Importing_gltf.js";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";import { loadModel } from './Importing_gltf.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 export function addBuildings(grid, gridSize, scene) {
   const cellSize = 1;
@@ -249,7 +248,10 @@ export function createCanvas(grid, gridSize, scene) {
   for (let i = 0; i < gridSize; i++) {
     for (let j = 0; j < gridSize; j++) {
       const type = grid[i][j];
-      const color = new THREE.Color(0.5, 0.5, 0.5); // Default color if type is not defined
+      if(type==1)
+      var color = new THREE.Color(1,1,1); 
+      else
+     var color = new THREE.Color(0.5, 0.5, 0.5); /*Default color if type is not defined*/
       const material = new THREE.MeshBasicMaterial({
         color: color,
         side: THREE.DoubleSide,
