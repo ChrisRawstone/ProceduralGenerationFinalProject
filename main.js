@@ -112,18 +112,3 @@ function animate() {
     controls.update();
 }
 animate();
-
-
-
-for (let i = 0; i < gridSize; i++) {
-    console.log(newgrid[i].join(" "));
-}
-
-// find coordinates in the grid where the value is 4
-for (let i = 0; i < gridSize; i++) {
-    for (let j = 0; j < gridSize; j++) {
-        if (newgrid[i][j] === 10 ||newgrid[i][j] === 11 || newgrid[i][j] === 12  ) {
-            console.log(`Road found at (${i}, ${j})`);
-        }
-    }
-}
