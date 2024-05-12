@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from './build/controls/OrbitControls.js';
-import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets} from './grid.js';
+import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets,detectRoadJunctions} from './grid.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import {addTrees, addSupermarkets, addBuildings, createCanvas, preloadTrees} from './objects.js';
+import {addTrees, addSupermarkets, addBuildings, createCanvas, preloadTrees, hdrLoader} from './objects.js';
+
 
 
 console.log("hey");
@@ -16,6 +17,13 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 renderer.setClearColor(new THREE.Color(0x87CEEB)); // Light blue background
+
+//Tone Mapping for HDR
+renderer.toneMapping= THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=0.6;
+renderer.outputEncoding=THREE.sRGBEncoding;
+
+
 
 const controls = new OrbitControls(camera, renderer.domElement);
 camera.position.set(0, 50, 100);
@@ -78,9 +86,10 @@ placeTrees(grid,gridSize,probability_of_tree);
 // for (let i = 0; i < gridSize; i++) {
 //     console.log(grid[i].join(" "));
 // }
-
+var newgrid=detectRoadJunctions(grid,gridSize)
 // this is visualizing the grid
-createCanvas(grid,gridSize,scene);
+createCanvas(newgrid,gridSize,scene);
+
 
 
 
@@ -92,8 +101,7 @@ preloadTrees(scene, () => {
 
 addSupermarkets(grid, gridSize, scene);
 addBuildings(grid, gridSize, scene);
-
-
+//hdrLoader(scene,renderer);
 
 
 
@@ -104,3 +112,18 @@ function animate() {
     controls.update();
 }
 animate();
+
+
+
+for (let i = 0; i < gridSize; i++) {
+    console.log(newgrid[i].join(" "));
+}
+
+// find coordinates in the grid where the value is 4
+for (let i = 0; i < gridSize; i++) {
+    for (let j = 0; j < gridSize; j++) {
+        if (newgrid[i][j] === 10 ||newgrid[i][j] === 11 || newgrid[i][j] === 12  ) {
+            console.log(`Road found at (${i}, ${j})`);
+        }
+    }
+}
