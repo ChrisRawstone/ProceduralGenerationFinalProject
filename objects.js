@@ -2,41 +2,34 @@ import * as THREE from 'three';
 import { loadModel } from './Importing_gltf.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+// Define a global processed set
+const globalProcessed = new Set();
+
 export function addBuildings(grid, gridSize, scene) {
     const cellSize = 1;
-    // const buildingTexture = new THREE.TextureLoader().load('Textures/building_day_texture.jpg');
-    const buildingTexture = new THREE.TextureLoader().load('Textures/building_day_texture.jpg');
-    const buildingMaterial = new THREE.MeshStandardMaterial({ map: buildingTexture, }); // Blue for buildings
-    const outlineMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(1, 1, 1), side: THREE.BackSide }); // White outline
-    outlineMaterial.transparent = true;
-    outlineMaterial.opacity = 0.5; // Adjust transparency as needed
-    const processed = new Set(); // To track processed cells
+    const buildingTexture = new THREE.TextureLoader().load('Textures/building_texture_3.jpg');
+    const buildingMaterial = new THREE.MeshStandardMaterial({ map: buildingTexture });
+    const outlineMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(0, 0, 0), side: THREE.BackSide, transparent: true, opacity: 1 });
 
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
             const key = `${i},${j}`;
-            if (grid[i][j] === 2 && !processed.has(key)) {
-                // Detect entire cluster of contiguous 2's
-                const { minI, maxI, minJ, maxJ, count } = getClusterBounds(grid, i, j, processed, gridSize);
-                const clusterWidth = maxJ - minJ + 1;
-                const clusterHeight = maxI - minI + 1;
-                const clusterCenterX = (minJ + maxJ) / 2;
-                const clusterCenterY = (minI + maxI) / 2;
-                const distanceToCenter = Math.max(Math.abs(clusterCenterY - gridSize / 2), Math.abs(clusterCenterX - gridSize / 2));
-                const proximityScale = (gridSize / 2 - distanceToCenter) / (gridSize / 2); // Scaled 0-1, 1 is closest to center
-                const randomHeight = 1 + Math.random() * Math.sqrt(count) * proximityScale * 2; // Height based on cluster size and center proximity
+            if (grid[i][j] === 2 && !globalProcessed.has(key)) {
+                const bounds = getClusterBounds(grid, i, j, globalProcessed, gridSize);
+                const clusterWidth = bounds.maxJ - bounds.minJ + 1;
+                const clusterHeight = bounds.maxI - bounds.minI + 1;
+                const randomHeight = 1 + Math.random() * Math.sqrt(bounds.count) * ((gridSize / 2 - bounds.distanceToCenter) / (gridSize / 2)) * 2;
 
                 const cubeGeometry = new THREE.BoxGeometry(cellSize * clusterWidth, randomHeight, cellSize * clusterHeight);
-                const building = new THREE.Mesh(cubeGeometry, buildingMaterial);
-                building.position.set((clusterCenterX - gridSize / 2 ) * cellSize, randomHeight / 2, (clusterCenterY - gridSize / 2 ) * cellSize);
+                const building = new THREE.Mesh(cubeGeometry, buildingMaterial.clone()); // Clone material for this instance
+                building.position.set((bounds.clusterCenterX - gridSize / 2) * cellSize, randomHeight / 2, (bounds.clusterCenterY - gridSize / 2) * cellSize);
                 building.castShadow = true;
                 building.receiveShadow = true;
                 scene.add(building);
 
-                // Add outline
-                const outlineScale = 1.05;
-                const outlineGeometry = new THREE.BoxGeometry(cellSize * clusterWidth * outlineScale, randomHeight * outlineScale, cellSize * clusterHeight * outlineScale);
-                const outlineMesh = new THREE.Mesh(outlineGeometry, outlineMaterial);
+                // Add outline with slightly larger geometry
+                const outlineGeometry = new THREE.BoxGeometry(cellSize * clusterWidth * 1.05, randomHeight * 1.05, cellSize * clusterHeight * 1.05);
+                const outlineMesh = new THREE.Mesh(outlineGeometry, outlineMaterial.clone()); // Clone material for outline
                 outlineMesh.position.copy(building.position);
                 scene.add(outlineMesh);
             }
@@ -56,7 +49,7 @@ export function getClusterBounds(grid, startI, startJ, processed, gridSize) {
         maxI = Math.max(maxI, i);
         minJ = Math.min(minJ, j);
         maxJ = Math.max(maxJ, j);
-        // Check neighbors
+        // Explore neighbors
         [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]].forEach(([ni, nj]) => {
             if (ni >= 0 && ni < gridSize && nj >= 0 && nj < gridSize && grid[ni][nj] === 2 && !processed.has(`${ni},${nj}`)) {
                 queue.push([ni, nj]);
@@ -65,7 +58,10 @@ export function getClusterBounds(grid, startI, startJ, processed, gridSize) {
     }
     return {
         minI, maxI, minJ, maxJ,
-        count: (maxI - minI + 1) * (maxJ - minJ + 1) // Total number of cells in the cluster
+        count: (maxI - minI + 1) * (maxJ - minJ + 1), // Total cells in cluster
+        clusterCenterX: (minJ + maxJ) / 2,
+        clusterCenterY: (minI + maxI) / 2,
+        distanceToCenter: Math.max(Math.abs((minI + maxI) / 2 - gridSize / 2), Math.abs((minJ + maxJ) / 2 - gridSize / 2))
     };
 }
 
@@ -179,6 +175,24 @@ export function addSupermarkets(grid, gridSize, scene) {
     }
 }
 
+export function createGround(scene, gridSize, texturePath) {
+    const groundSize = gridSize; // Define the size of the ground
+    const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
+    const loader = new THREE.TextureLoader();
+
+    loader.load(texturePath, function(texture) {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(5, 5); // Adjust these values based on your texture and aesthetic needs
+        const groundMaterial = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.set(0, -0.01, 0); // Slightly lower to avoid z-fighting
+        ground.receiveShadow = true;
+        scene.add(ground);
+    });
+}
+
+
 export function createCanvas(grid, gridSize, scene) {
     const cellSize = 1;
     const cellGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
@@ -186,7 +200,7 @@ export function createCanvas(grid, gridSize, scene) {
 
     const colors = {
         0: new THREE.Color(88/255,45/255,15/255),
-        1: new THREE.Color(1, 1, 1),
+        1: new THREE.Color(1, 1, 1), 
         2: new THREE.Color(0, 0, 1),
         3: new THREE.Color(1, 0.5, 0),
         4: new THREE.Color(0, 0.5, 0),
@@ -197,7 +211,8 @@ export function createCanvas(grid, gridSize, scene) {
         for (let j = 0; j < gridSize; j++) {
             const type = grid[i][j];
             const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5);
-            const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
+
+            const material = new THREE.MeshBasicMaterial({ color: color});
             const cell = new THREE.Mesh(cellGeometry, material);
             cell.rotation.x = -Math.PI / 2;
             cell.position.set(j - 0.5 * gridSize, 0, i - 0.5 * gridSize);
@@ -205,6 +220,7 @@ export function createCanvas(grid, gridSize, scene) {
             cell.receiveShadow = true;
             scene.add(cell);
             meshGrid[i][j] = cell;
+            
         }
     }
     return { scene, meshGrid };  // Return both scene and meshGrid

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from './build/controls/OrbitControls.js';
 import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets} from './grid.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import {addTrees, addSupermarkets, addBuildings, preloadTrees,addShadows} from './objects.js';
+import {addTrees, addSupermarkets, addBuildings, preloadTrees,addShadows,createGround} from './objects.js';
 
 
 console.log("hey");
@@ -53,10 +53,9 @@ var bias_half_life = 0.5; // the lower this value is the less symetric the roads
 
 var probability_of_supermarket = 0.005; // this is the probability of a supermarket being placed on a cell
 var probability_of_building = 0.9; // this is the probability of a building being placed on a cell
-var probability_of_tree = 0.01; // this is the probability of a tree being placed on a cell
+var probability_of_tree = 0.002; // this is the probability of a tree being placed on a cell
 
 var scale_of_tree = 0.2; // this is the scale of the tree
-
 
 // Starting positions of the first road - if you are unsure of what to put here, just leave it as is
 var x = Math.floor(gridSize * 1 / 4);
@@ -81,6 +80,7 @@ grid = init_grid(gridSize);
 
 // controls.update();
 
+// createGround(scene, gridSize, "Textures/ground1.jpg");
 // Create and add cells to the scene based on the grid
 var {scene, meshGrid} = createCanvas(grid, gridSize, scene);
 
@@ -148,6 +148,7 @@ export function createCanvas(grid, gridSize, scene) {
         for (let j = 0; j < gridSize; j++) {
             const type = grid[i][j];
             const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5);
+            // if (type === 1) continue;
             const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
             const cell = new THREE.Mesh(cellGeometry, material);
             cell.rotation.x = -Math.PI / 2;
@@ -208,21 +209,15 @@ function handleCanvasInteraction(event) {
             const lineInfo = checkForLines(grid, x, y, gridSize);
             // Example usage within your handleCanvasInteraction
             if (lineInfo) {
-                console.log('Line info:', lineInfo);
-                console.log("hit1")
+
                 const oldGrid = grid.map(row => row.slice());  // Create a shallow copy of the grid for comparison
-                console.log("hit2")
                 // populateGridWithRoadsRecursively(grid, lineInfo.endX, lineInfo.endY, lineInfo.startX, lineInfo.startY, 1, gridSize, 5, 0.5, 10);
                 populateGridWithRoadsRecursively(grid, lineInfo.endX, lineInfo.endY, lineInfo.startX, lineInfo.startY, iterations_of_Lsystem, gridSize, line_segment_size, weight_bias, bias_half_life);
 
                 
-                console.log("hit3")
                 updateCanvas(oldGrid, grid, meshGrid, gridSize);  // Update the canvas with new grid data
 
 
-
-                //print line info
-                console.log("hit4")
 
                 placeSupermarkets(grid,gridSize, probability_of_supermarket);
                 placeBuildings(grid,gridSize,probability_of_building, 5);
@@ -230,8 +225,6 @@ function handleCanvasInteraction(event) {
 
                 addSupermarkets(grid, gridSize, scene);
                 addBuildings(grid, gridSize, scene);
-
-                console.log("hit100!!!")
 
             }
 
