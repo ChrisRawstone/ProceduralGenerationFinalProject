@@ -110,7 +110,7 @@ function populateArray(grid, x, y, gridSize, line_segment_size, direction, axis)
 export function populateGridWithRoadsRecursively(grid, x, y, x_prev, y_prev, depth, gridSize, line_segment_size, weight_bias, bias_half_life) {
     placeVerticalRoad(grid, x, y, x_prev, y_prev, depth, 0, gridSize, line_segment_size, weight_bias, bias_half_life); //  0 means making a line downwards
     placeVerticalRoad(grid, x, y, x_prev, y_prev, depth, 1, gridSize, line_segment_size, weight_bias, bias_half_life); // 1 means making a line upwards
-
+    console.log("hit6")
     return grid;
 }
 
@@ -148,6 +148,7 @@ function placeVerticalRoad(grid, x, y, x_prev, y_prev, depth, direction, gridSiz
     // this draws the line
     [grid, x, y] = populateArray(grid, x, y, gridSize, line_segment_size, direction, "y")
 
+    console.log("hit7")
     // Recursion
     placeHorisontalRoad(grid, x, y, x_prev, y_prev, depth - 1, direction = 0, gridSize, line_segment_size, Math.ceil(weight_bias * bias_half_life), bias_half_life);
     placeHorisontalRoad(grid, x, y, x_prev, y_prev, depth - 1, direction = 1, gridSize, line_segment_size, Math.ceil(weight_bias * bias_half_life), bias_half_life);
@@ -156,6 +157,7 @@ function placeVerticalRoad(grid, x, y, x_prev, y_prev, depth, direction, gridSiz
 function placeHorisontalRoad(grid, x, y, x_prev, y_prev, depth, direction, gridSize, line_segment_size, weight_bias, bias_half_life) {
     if (depth == 0) return grid; // base case - recursive algorithm
 
+    console.log("hit8")
     // check if out of bounds
     if (y >= gridSize || y < 0) return grid;
     if (x >= gridSize || x < 0) return grid;

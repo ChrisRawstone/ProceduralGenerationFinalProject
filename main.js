@@ -45,10 +45,10 @@ scene.background = skyboxTexture;
 var grid;
 var x_prev, y_prev;
 
-var gridSize = 100; // this determines the map size
-var line_segment_size = 5; // this will make longer roads if it is higher
+var gridSize = 20; // this determines the map size
+var line_segment_size = 10; // this will make longer roads if it is higher
 var iterations_of_Lsystem = 10; // the higher this value is the more roads will be generated
-var weight_bias = 0; // the higher this value is the symmetric the roads will be. This can be anywhere from 0 to 10000
+var weight_bias = 1; // the higher this value is the symmetric the roads will be. This can be anywhere from 0 to 10000
 var bias_half_life = 0.4; // the lower this value is the less symetric the roads will be from the middle. This can be anywhere from 0 to 1
 
 var probability_of_supermarket = 0.005; // this is the probability of a supermarket being placed on a cell
@@ -69,6 +69,8 @@ var y = Math.floor(gridSize / 2);
 grid = init_grid(gridSize);
 // Initialize road starting point based on mouse drag
 [grid, x, x_prev, y, y_prev] = initialize_starting_road(grid, gridSize, x, y);
+populateGridWithRoadsRecursively(grid, x, y, x_prev, y_prev, 1, gridSize, 5, 0.5, 10);
+
 
 
 // print array nicely
@@ -78,7 +80,7 @@ grid = init_grid(gridSize);
 // controls.update();
 
 // Create and add cells to the scene based on the grid
-createCanvas(grid, gridSize, scene);
+var {scene, meshGrid} = createCanvas(grid, gridSize, scene);
 
 
 let controlsEnabled = false;
@@ -109,6 +111,9 @@ function stopDrawing(event) {
     isDrawing = false;
     // console.log('Grid updated:', grid); // Print the grid array
     createCanvas(grid, gridSize, scene)
+    console.log('Grid updated:', grid); // Print the grid array
+    // console.log('x:', x, 'y:', y);
+    // console.log('x_prev:', x_prev, 'y_prev:', y_prev);
 }
 
 function handleMouseMove(event) {
@@ -116,6 +121,29 @@ function handleMouseMove(event) {
         handleCanvasInteraction(event);
     }
 }
+
+export function updateCanvas(oldGrid, newGrid, meshGrid, gridSize) {
+    const colors = {
+        0: new THREE.Color(88/255,45/255,15/255),
+        1: new THREE.Color(1, 1, 1),
+        2: new THREE.Color(0, 0, 1),
+        3: new THREE.Color(1, 0.5, 0),
+        4: new THREE.Color(0, 0.5, 0),
+        5: new THREE.Color(0.6, 0.4, 0.2),
+    };
+
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            if (oldGrid[i][j] !== newGrid[i][j]) {  // Check for changes
+                const type = newGrid[i][j];
+                const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5);
+                const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
+                meshGrid[i][j].material = material;  // Update only the material
+            }
+        }
+    }
+}
+
 
 function handleCanvasInteraction(event) {
     const mouse = new THREE.Vector2();
@@ -139,14 +167,23 @@ function handleCanvasInteraction(event) {
 
             // Check for lines of more than 5 ones horizontally or vertically
             const lineInfo = checkForLines(grid, x, y, gridSize);
+            // Example usage within your handleCanvasInteraction
             if (lineInfo) {
-                console.log('Line detected:', lineInfo);
-                populateGridWithRoadsRecursively(grid, lineInfo.endX, lineInfo.endY, lineInfo.startX, lineInfo.startY, iterations_of_Lsystem, gridSize, line_segment_size, weight_bias, bias_half_life);
-                // populateGridWithRoadsRecursively(grid, x, y, x_prev, y_prev, iterations_of_Lsystem, gridSize, line_segment_size, weight_bias, bias_half_life);
+                console.log('Line info:', lineInfo);
+                console.log("hit1")
+                const oldGrid = grid.map(row => row.slice());  // Create a shallow copy of the grid for comparison
+                console.log("hit2")
+                populateGridWithRoadsRecursively(grid, lineInfo.endX, lineInfo.endY, lineInfo.startX, lineInfo.startY, 1, gridSize, 5, 0.5, 10);
+                console.log("hit3")
+                updateCanvas(oldGrid, grid, meshGrid, gridSize);  // Update the canvas with new grid data
+
+
+
+                //print line info
+                console.log("hit4")
 
             }
 
-            console.log('Grid updated:', grid); // Print the grid array
         }
     }
 }
@@ -158,6 +195,7 @@ function checkForLines(grid, x, y, gridSize) {
     for (let i = x - 1; i >= 0 && grid[y][i] === 1; i--, startX--);
     for (let i = x + 1; i < gridSize && grid[y][i] === 1; i++, endX++);
     if (endX - startX > 4) return { startX, endX, startY: y, endY: y };
+
 
     // Vertical check
     let startY = y, endY = y;
