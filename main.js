@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from './build/controls/OrbitControls.js';
-import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets} from './grid.js';
+import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets,detectRoadJunctions} from './grid.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import {addTrees, addSupermarkets, addBuildings, createCanvas, preloadTrees,addShadows} from './objects.js';
+import {addTrees, addSupermarkets, addBuildings, createCanvas, preloadTrees, hdrLoader} from './objects.js';
+
 
 
 console.log("hey");
@@ -16,6 +17,13 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 renderer.setClearColor(new THREE.Color(0x87CEEB)); // Light blue background
+
+//Tone Mapping for HDR
+renderer.toneMapping= THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=0.6;
+renderer.outputEncoding=THREE.sRGBEncoding;
+
+
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; // Smoothly damping effect during rotation
@@ -93,9 +101,10 @@ placeTrees(grid,gridSize,probability_of_tree);
 // for (let i = 0; i < gridSize; i++) {
 //     console.log(grid[i].join(" "));
 // }
-
+var newgrid=detectRoadJunctions(grid,gridSize)
 // this is visualizing the grid
-createCanvas(grid,gridSize,scene);
+createCanvas(newgrid,gridSize,scene);
+
 
 
 
@@ -107,8 +116,7 @@ preloadTrees(scene, () => {
 
 addSupermarkets(grid, gridSize, scene);
 addBuildings(grid, gridSize, scene);
-
- // Whenever the regenerate button is clicked, update our city option variables and
+//hdrLoader(scene,renderer); // Whenever the regenerate button is clicked, update our city option variables and
  // regenerate the scene
 export function regenerate() {
 	   updateCityOptions();

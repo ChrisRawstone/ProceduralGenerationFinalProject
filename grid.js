@@ -1,9 +1,6 @@
 import * as THREE from 'three';
 
 
-
-
-
 export function init_grid(grid_Size) {
     var grid = [];
     for (let i = 0; i < grid_Size; i++) {
@@ -364,5 +361,45 @@ function countAdjacentRoads(grid, gridSize, x, y) {
     }
     return count;
 }
+//Detection of junctions
+export function detectRoadJunctions(grid, gridSize) {
+    const junctionMap = [];
+    for (let i = 0; i < gridSize; i++) {
+        junctionMap[i] = new Array(gridSize).fill(0); // Initially no junctions detected
+    }
 
+    // Helper function to count road connections
+    function countConnections(x, y) {
+        const connections = [
+            [x, y - 1], // North
+            [x, y + 1], // South
+            [x - 1, y], // West
+            [x + 1, y] // East
+        ];
+        return connections.reduce((count, [nx, ny]) => {
+            if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && grid[ny][nx] === 1) {
+                count++;
+            }
+            return count;
+        }, 0);
+    }
 
+    for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+            if (grid[y][x] === 1) { // Only check road cells
+                const connectionCount = countConnections(x, y);
+                if (connectionCount > 2) {
+                    junctionMap[y][x] = 11; // Intersection
+                } else if (connectionCount === 2) {
+                    if ((grid[y][x-1] === 1 && grid[y][x+1] === 1) || (grid[y-1][x] === 1 && grid[y+1][x] === 1)) {
+                        junctionMap[y][x] = 10; // Straight road
+                    } else {
+                        junctionMap[y][x] = 12; // T-junction
+                    }
+                }
+            }
+        }
+    }
+
+    return junctionMap;
+}

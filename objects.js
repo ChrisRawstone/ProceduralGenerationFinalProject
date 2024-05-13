@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { loadModel } from './Importing_gltf.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+
 
 export function addBuildings(grid, gridSize, scene) {
     const cellSize = 1;
@@ -69,12 +71,18 @@ export function getClusterBounds(grid, startI, startJ, processed, gridSize) {
     };
 }
 
+//HDR Loader
 
+export function hdrLoader(scene, renderer) {
+   new RGBELoader().load("../HDR/hdr.hdr",function(texture){
+    texture.mapping= THREE.EquirectangularReflectionMapping;
+    scene.background=texture
+    scene.environment=texture;
+   });
+}
 
 const trees = [
-    'tree1',
-    'tree2',
-    'oak_trees',
+    'tree5',
     'tree4'
     // Add more tree paths as needed
 ];
@@ -92,8 +100,7 @@ export function preloadTrees(scene, callback) {
     }
 
     function loadModel(path, callback) {
-        // const loader = new THREE.GLTFLoader(); // Assuming you're using GLTF format
-        var loader = new GLTFLoader();
+        const loader = new GLTFLoader();
         loader.load(
             path,
             (gltf) => {
@@ -103,7 +110,6 @@ export function preloadTrees(scene, callback) {
                         node.castShadow = true;
                         node.receiveShadow = true;
                     }
-                    
                 });
                 preloadedTrees[path] = model;
                 callback();
@@ -117,33 +123,27 @@ export function preloadTrees(scene, callback) {
     }
 
     trees.forEach((treePath) => {
-        loadModel(`models/${trees[3]}/scene.gltf`, onLoad);
+        loadModel(`models/tree4/scene.gltf`, onLoad);
     });
 }
 
-function getRandomTreeIndex() {
-    return Math.floor(Math.random() * trees.length);
-}
-
-export function addTrees(grid, gridSize, scene,scale_of_tree) {
+export function addTrees(grid, gridSize, scene) {
     const cellSize = 1;
     const treeHeight = 2; // Fixed height for all trees for simplicity
     const treeRadius = 0.2; // Radius of the tree's trunk
     const treeGeometry = new THREE.CylinderGeometry(treeRadius, treeRadius, treeHeight, 16); // Create a cylinder to represent trees
     const treeMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(0, 0.5, 0) }); // Dark green for trees
-    
+
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
             if (grid[i][j] === 4) {  // Check if the cell type is for a tree
                 const treeIndex = getRandomTreeIndex();
-                // const treePath = trees[treeIndex];
-                const originalModel = preloadedTrees[`models/${trees[3]}/scene.gltf`];
+                const treePath = trees[treeIndex];
+                const originalModel = preloadedTrees[`models/tree4/scene.gltf`];
                 if (originalModel) {
                     const newTree = originalModel.clone(); // Clone the preloaded tree model
-                    newTree.position.set(j - 0.5 * gridSize, (treeHeight / 2)-1, i - 0.5 * gridSize);
-                    newTree.scale.set(scale_of_tree, scale_of_tree, scale_of_tree); // Scale if needed
-                    newTree.castShadow = true;
-                    newTree.receiveShadow = true;
+                    newTree.position.set(j - 0.5 * gridSize, (treeHeight / 2) - 1, i - 0.5 * gridSize);
+                    newTree.scale.set(0.2, 0.2, 0.2); // Scale if needed
                     scene.add(newTree);
                 } else {
                     // Fallback to a cylinder if the model is not loaded
@@ -155,6 +155,10 @@ export function addTrees(grid, gridSize, scene,scale_of_tree) {
             }
         }
     }
+}
+
+function getRandomTreeIndex() {
+    return Math.floor(Math.random() * trees.length);
 }
 
 
@@ -176,34 +180,42 @@ export function addSupermarkets(grid, gridSize, scene) {
         }
     }
 }
-
+//Loading Textures
+const textureLoader = new THREE.TextureLoader();
+const textures = {
+    10: textureLoader.load('Textures/road.jpeg'),  // Texture for straight roads
+    11: textureLoader.load('Textures/intersection.png'),  // Texture for intersections
+    12: textureLoader.load('Textures/t_junction.jpg'),    // Texture for T-junctions
+};
 export function createCanvas(grid, gridSize, scene) {
     const cellSize = 1;
     const cellGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
 
-    // Define colors for different types of grid cells
-    const colors = {
-        0: new THREE.Color(88/255,45/255,15/255), // Empty space
-        1: new THREE.Color(1, 1, 1), // Road (white)
-        2: new THREE.Color(0, 0, 1),  // Building (blue)
-        3: new THREE.Color(1, 0.5, 0),  // Super Market (orange)
-        4: new THREE.Color(0, 0.5, 0), // Trees (Dark green)
-        5: new THREE.Color(0.6, 0.4, 0.2), // Brown
-
-
-    };
-
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
             const type = grid[i][j];
-            const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5); // Default color if type is not defined
-            const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
+            let material;
+
+            if (textures[type]) { // Check if there is a texture defined for this type
+                material = new THREE.MeshBasicMaterial({ map: textures[type] });
+            } else {
+                // Fallback color if no texture is defined
+                const colors = {
+                    0: new THREE.Color(0.6, 0.4, 0.2), // Empty space
+                   10: new THREE.Color(1, 1, 1), // Road (white)
+                    11: new THREE.Color(0.5,1, 1), // Road (white)
+                    12:new THREE.Color(1, 0.5, 1), // Road (white)
+                    2: new THREE.Color(0, 0, 1),  // Building (blue)
+                    3: new THREE.Color(1, 0.5, 0),  // Super Market (orange)
+                    4: new THREE.Color(0, 0.5, 0), // Trees (Dark green)
+                    5: new THREE.Color(0.6, 0.4, 0.2), // Brown
+                };
+                const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5);
+                material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
+            }
+
             const cell = new THREE.Mesh(cellGeometry, material);
-
-            // Rotate each cell individually
             cell.rotation.x = -Math.PI / 2;
-
-            // Adjust position to center the grid on the xz-plane
             cell.position.set(j - 0.5 * gridSize, 0, i - 0.5 * gridSize);
 
             cell.castShadow = true;
@@ -211,32 +223,6 @@ export function createCanvas(grid, gridSize, scene) {
             scene.add(cell);
         }
     }
-    return scene
+    return scene;
 }
 
-export function addShadows(scene) {
-
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(20, 20, 20);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 1024;
-    directionalLight.shadow.mapSize.height = 1024;
-    directionalLight.shadow.camera.near = 0.5;
-    directionalLight.shadow.camera.far = 50;
-
-
-    const d = 100;
-    directionalLight.shadow.camera.left = -d;
-    directionalLight.shadow.camera.right = d;
-    directionalLight.shadow.camera.top = d;
-    directionalLight.shadow.camera.bottom = -d;
-
-    scene.add(directionalLight);
-
-    // const lightHelper = new THREE.DirectionalLightHelper(directionalLight);
-    // scene.add(lightHelper);
-
-    // const shadowHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
-    // scene.add(shadowHelper);
-}
