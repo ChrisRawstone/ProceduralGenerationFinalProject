@@ -6,8 +6,9 @@ import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 export function addBuildings(grid, gridSize, scene) {
     const cellSize = 1;
-    const buildingTexture = new THREE.TextureLoader().load('Textures/building_night_texture.jpg');
-    const buildingMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(0, 0, 1)}); // Blue for buildings
+    // const buildingTexture = new THREE.TextureLoader().load('Textures/building_day_texture.jpg');
+    const buildingTexture = new THREE.TextureLoader().load('Textures/building_day_texture.jpg');
+    const buildingMaterial = new THREE.MeshStandardMaterial({ map: buildingTexture, }); // Blue for buildings
     const outlineMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(1, 1, 1), side: THREE.BackSide }); // White outline
     outlineMaterial.transparent = true;
     outlineMaterial.opacity = 0.5; // Adjust transparency as needed
@@ -30,8 +31,8 @@ export function addBuildings(grid, gridSize, scene) {
                 const cubeGeometry = new THREE.BoxGeometry(cellSize * clusterWidth, randomHeight, cellSize * clusterHeight);
                 const building = new THREE.Mesh(cubeGeometry, buildingMaterial);
                 building.position.set((clusterCenterX - gridSize / 2 ) * cellSize, randomHeight / 2, (clusterCenterY - gridSize / 2 ) * cellSize);
-                // building.castShadow = true;
-                // building.receiveShadow = true;
+                building.castShadow = true;
+                building.receiveShadow = true;
                 scene.add(building);
 
                 // Add outline
@@ -126,7 +127,7 @@ export function preloadTrees(scene, callback) {
     });
 }
 
-export function addTrees(grid, gridSize, scene) {
+export function addTrees(grid, gridSize, scene,scale_of_tree) {
     const cellSize = 1;
     const treeHeight = 2; // Fixed height for all trees for simplicity
     const treeRadius = 0.2; // Radius of the tree's trunk
@@ -141,13 +142,14 @@ export function addTrees(grid, gridSize, scene) {
                 const originalModel = preloadedTrees[`models/tree4/scene.gltf`];
                 if (originalModel) {
                     const newTree = originalModel.clone(); // Clone the preloaded tree model
-                    newTree.position.set(j - 0.5 * gridSize, (treeHeight / 2) - 1, i - 0.5 * gridSize);
-                    newTree.scale.set(0.2, 0.2, 0.2); // Scale if needed
+                    newTree.position.set(j - 0.5 * gridSize, (treeHeight / 2)-1, i - 0.5 * gridSize);
+                    newTree.scale.set(0.5, 0.5, 0.5); // Scale if needed
                     scene.add(newTree);
                 } else {
                     // Fallback to a cylinder if the model is not loaded
                     const fallbackTree = new THREE.Mesh(treeGeometry, treeMaterial);
                     fallbackTree.position.set(j - 0.5 * gridSize, treeHeight / 2, i - 0.5 * gridSize);
+                    // fallbackTree.scale.set(scale_of_tree, scale_of_tree, scale_of_tree);
                     scene.add(fallbackTree);
                 }
             }
@@ -171,21 +173,29 @@ export function addSupermarkets(grid, gridSize, scene) {
             if (grid[i][j] === 3) {  // Check if the cell type is for a supermarket
                 const supermarket = new THREE.Mesh(supermarketGeometry, supermarketMaterial);
                 supermarket.position.set(j - 0.5 * gridSize, supermarketHeight / 2, i - 0.5 * gridSize);  // Center the supermarket cube on the cell
+                supermarket.castShadow = true;
+                supermarket.receiveShadow = true;
                 scene.add(supermarket);
             }
         }
     }
 }
-//Loading Textures
-const textureLoader = new THREE.TextureLoader();
-const textures = {
-    10: textureLoader.load('Textures/road.jpeg'),  // Texture for straight roads
-    11: textureLoader.load('Textures/intersection.png'),  // Texture for intersections
-    12: textureLoader.load('Textures/t_junction.jpg'),    // Texture for T-junctions
-};
-export function createCanvas(grid, gridSize, scene) {
+
+export function createCanvas(grid,gridSize, scene) {
     const cellSize = 1;
     const cellGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
+
+    // Define colors for different types of grid cells
+    const colors = {
+        0: new THREE.Color(0.6, 0.4, 0.2), // Empty space
+        1: new THREE.Color(1, 1, 1), // Road (white)
+        2: new THREE.Color(0, 0, 1),  // Building (blue)
+        3: new THREE.Color(1, 0.5, 0),  // Super Market (orange)
+        4: new THREE.Color(0, 0.5, 0), // Trees (Dark green)
+        5: new THREE.Color(0.6, 0.4, 0.2), // Brown
+
+
+    };
 
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
@@ -213,9 +223,39 @@ export function createCanvas(grid, gridSize, scene) {
             const cell = new THREE.Mesh(cellGeometry, material);
             cell.rotation.x = -Math.PI / 2;
             cell.position.set(j - 0.5 * gridSize, 0, i - 0.5 * gridSize);
+
+            cell.castShadow = true;
+            cell.receiveShadow = true;
             scene.add(cell);
         }
     }
     return scene;
 }
 
+
+export function addShadows(scene) {
+
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(20, 20, 20);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 1024;
+    directionalLight.shadow.mapSize.height = 1024;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 50;
+
+
+    const d = 100;
+    directionalLight.shadow.camera.left = -d;
+    directionalLight.shadow.camera.right = d;
+    directionalLight.shadow.camera.top = d;
+    directionalLight.shadow.camera.bottom = -d;
+
+    scene.add(directionalLight);
+
+    // const lightHelper = new THREE.DirectionalLightHelper(directionalLight);
+    // scene.add(lightHelper);
+
+    // const shadowHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+    // scene.add(shadowHelper);
+}
