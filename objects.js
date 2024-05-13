@@ -71,6 +71,8 @@ export function getClusterBounds(grid, startI, startJ, processed, gridSize) {
 
 
 
+
+
 const trees = [
     'tree1',
     'tree2',
