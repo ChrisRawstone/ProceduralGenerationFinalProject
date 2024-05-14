@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './build/controls/OrbitControls.js';
-import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets,detectRoadJunctions} from './grid.js';
+import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets,detectRoadJunctions, groupBuildings} from './grid.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {addTrees, addSupermarkets, addBuildings, createCanvas, preloadTrees,addShadows} from './objects.js';
 
@@ -88,9 +88,13 @@ placeTrees(grid,gridSize,probability_of_tree);
 // for (let i = 0; i < gridSize; i++) {
 //     console.log(grid[i].join(" "));
 // }
-var newgrid=detectRoadJunctions(grid,gridSize)
-// this is visualizing the grid
-createCanvas(newgrid,gridSize,scene);
+// var groupedGrid = groupBuildings(grid, gridSize);
+
+// Now pass the grouped grid to detect road junctions and capture the new grid
+var junctionGrid = detectRoadJunctions(grid, gridSize);
+
+// Finally, use the grid with detected junctions to create the canvas
+createCanvas(junctionGrid, gridSize, scene);
 
 
 

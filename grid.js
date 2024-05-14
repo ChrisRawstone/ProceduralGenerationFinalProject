@@ -368,7 +368,7 @@ export function detectRoadJunctions(grid, gridSize) {
         junctionMap[i] = new Array(gridSize).fill(0); // Initially no junctions detected
     }
 
-    // Helper function to count road connections
+    // Helper function to count road connections and identify directions
     function countConnections(x, y) {
         const connections = [
             [x, y - 1], // North
@@ -376,25 +376,34 @@ export function detectRoadJunctions(grid, gridSize) {
             [x - 1, y], // West
             [x + 1, y] // East
         ];
-        return connections.reduce((count, [nx, ny]) => {
+        let connectionCount = 0;
+        const directions = [];
+
+        connections.forEach(([nx, ny], index) => {
             if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && grid[ny][nx] === 1) {
-                count++;
+                connectionCount++;
+                directions.push(index); // Save direction index
             }
-            return count;
-        }, 0);
+        });
+
+        return { count: connectionCount, directions };
     }
 
     for (let y = 0; y < gridSize; y++) {
         for (let x = 0; x < gridSize; x++) {
             if (grid[y][x] === 1) { // Only check road cells
-                const connectionCount = countConnections(x, y);
-                if (connectionCount > 2) {
-                    junctionMap[y][x] = 11; // Intersection
+                const { count: connectionCount, directions } = countConnections(x, y);
+
+                if (connectionCount === 4) {
+                    junctionMap[y][x] = 11; // Intersection (four connections)
+                } else if (connectionCount === 3) {
+                    junctionMap[y][x] = 12; // T-junction (three connections)
                 } else if (connectionCount === 2) {
-                    if ((grid[y][x-1] === 1 && grid[y][x+1] === 1) || (grid[y-1][x] === 1 && grid[y+1][x] === 1)) {
+                    // Check if connections are opposite each other (straight road)
+                    if ((directions.includes(0) && directions.includes(1)) || (directions.includes(2) && directions.includes(3))) {
                         junctionMap[y][x] = 10; // Straight road
                     } else {
-                        junctionMap[y][x] = 12; // T-junction
+                        junctionMap[y][x] = 12; // T-junction (but looks like a bend)
                     }
                 }
             }
@@ -403,3 +412,42 @@ export function detectRoadJunctions(grid, gridSize) {
 
     return junctionMap;
 }
+
+
+//Group Building
+export function groupBuildings(grid, gridSize) {
+    let clusterId = 20; // Starting ID for building clusters
+    const visited = Array.from({ length: gridSize }, () => Array(gridSize).fill(false));
+
+    function floodFill(x, y) {
+        const stack = [[x, y]];
+        while (stack.length > 0) {
+            const [cx, cy] = stack.pop();
+            if (visited[cy][cx]) continue;
+            visited[cy][cx] = true;
+            grid[cy][cx] = clusterId;
+
+            // Check all four adjacent cells
+            [[cx - 1, cy], [cx + 1, cy], [cx, cy - 1], [cx, cy + 1]].forEach(([nx, ny]) => {
+                if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && grid[ny][nx] === 2 && !visited[ny][nx]) {
+                    stack.push([nx, ny]);
+                }
+            });
+        }
+    }
+
+    for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+            if (grid[y][x] === 2 && !visited[y][x]) {
+                floodFill(x, y);
+                clusterId++;
+                // Reset clusterId to 20 if it goes beyond 22
+                if (clusterId > 22) {
+                    clusterId = 20;
+                }
+            }
+        }
+    }
+    return grid; // Return the modified grid
+}
+
