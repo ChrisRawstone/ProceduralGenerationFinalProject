@@ -5,6 +5,17 @@
 		<title>My first three.js app</title>
 		<style>
 			body { margin: 0; }
+			#controls {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .control {
+            margin-bottom: 10px;
+        }
 		</style>
 		
 	</head>
@@ -17,7 +28,28 @@
     </script>
 	<body>
 		<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script> -->
-
+		<div id="controls">
+			<div class="control">
+				<label for="line_segment_size">Line Segment Size: <span id="line_segment_size_value"></span></label>
+				<input type="range" id="line_segment_size" min="1" max="50" value="20">
+			</div>
+			<div class="control">
+				<label for="iterations_of_Lsystem">Iterations of L-System: <span id="iterations_of_Lsystem_value"></span></label>
+				<input type="range" id="iterations_of_Lsystem" min="1" max="10" value="5">
+			</div>
+			<div class="control">
+				<label for="weight_bias">Weight Bias: <span id="weight_bias_value"></span></label>
+				<input type="range" id="weight_bias" min="0" max="10000" value="100">
+			</div>
+			<div class="control">
+				<label for="bias_half_life">Bias Half-Life: <span id="bias_half_life_value"></span></label>
+				<input type="range" id="bias_half_life" min="0.1" max="1" step="0.1" value="0.5">
+			</div>
+			<div class="control">
+				<label for="probability_of_tree">Probability of Tree: <span id="probability_of_tree_value"></span></label>
+				<input type="range" id="probability_of_tree" min="0.001" max="0.1" step="0.001" value="0.002">
+			</div>
+		</div>
 		<script type="module" src="main.js"></script>
 	
 	</body>

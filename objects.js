@@ -142,12 +142,14 @@ export function addTrees(grid, gridSize, scene,scale_of_tree) {
                     newTree.scale.set(scale_of_tree, scale_of_tree, scale_of_tree); // Scale if needed
                     newTree.castShadow = true;
                     newTree.receiveShadow = true;
+                    newTree.userData.type = 'tree'; // Set userData to identify tree objects
                     scene.add(newTree);
                 } else {
                     // Fallback to a cylinder if the model is not loaded
                     const fallbackTree = new THREE.Mesh(treeGeometry, treeMaterial);
                     fallbackTree.position.set(j - 0.5 * gridSize, treeHeight / 2, i - 0.5 * gridSize);
                     // fallbackTree.scale.set(scale_of_tree, scale_of_tree, scale_of_tree);
+                    fallbackTree.userData.type = 'tree';
                     scene.add(fallbackTree);
                 }
             }
@@ -193,38 +195,7 @@ export function createGround(scene, gridSize, texturePath) {
 }
 
 
-export function createCanvas(grid, gridSize, scene) {
-    const cellSize = 1;
-    const cellGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
-    const meshGrid = new Array(gridSize).fill(null).map(() => new Array(gridSize).fill(null));
 
-    const colors = {
-        0: new THREE.Color(88/255,45/255,15/255),
-        1: new THREE.Color(1, 1, 1), 
-        2: new THREE.Color(0, 0, 1),
-        3: new THREE.Color(1, 0.5, 0),
-        4: new THREE.Color(0, 0.5, 0),
-        5: new THREE.Color(0.6, 0.4, 0.2),
-    };
-
-    for (let i = 0; i < gridSize; i++) {
-        for (let j = 0; j < gridSize; j++) {
-            const type = grid[i][j];
-            const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5);
-
-            const material = new THREE.MeshBasicMaterial({ color: color});
-            const cell = new THREE.Mesh(cellGeometry, material);
-            cell.rotation.x = -Math.PI / 2;
-            cell.position.set(j - 0.5 * gridSize, 0, i - 0.5 * gridSize);
-            cell.castShadow = true;
-            cell.receiveShadow = true;
-            scene.add(cell);
-            meshGrid[i][j] = cell;
-            
-        }
-    }
-    return { scene, meshGrid };  // Return both scene and meshGrid
-}
 
 export function addShadows(scene) {
 
@@ -252,3 +223,60 @@ export function addShadows(scene) {
     // const shadowHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
     // scene.add(shadowHelper);
 }
+
+
+export function createCanvas(grid, gridSize, scene) {
+    const cellSize = 1;
+    const cellGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
+    const meshGrid = new Array(gridSize).fill(null).map(() => new Array(gridSize).fill(null));
+
+    const colors = {
+        0: new THREE.Color(88/255,45/255,15/255),
+        1: new THREE.Color(1, 1, 1),
+        2: new THREE.Color(0, 0, 1),
+        3: new THREE.Color(1, 0.5, 0),
+        4: new THREE.Color(0, 0.5, 0),
+        5: new THREE.Color(0.6, 0.4, 0.2),
+    };
+
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            const type = grid[i][j];
+            const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5);
+            // if (type === 1) continue;
+            const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
+            const cell = new THREE.Mesh(cellGeometry, material);
+            cell.rotation.x = -Math.PI / 2;
+            cell.position.set(j - 0.5 * gridSize, 0, i - 0.5 * gridSize);
+            cell.castShadow = true;
+            cell.receiveShadow = true;
+            scene.add(cell);
+            meshGrid[i][j] = cell;
+        }
+    }
+    return { scene, meshGrid };  // Return both scene and meshGrid
+}
+
+
+export function updateCanvas(oldGrid, newGrid, meshGrid, gridSize) {
+    const colors = {
+        0: new THREE.Color(88/255,45/255,15/255),
+        1: new THREE.Color(1, 1, 1),
+        2: new THREE.Color(0, 0, 1),
+        3: new THREE.Color(1, 0.5, 0),
+        4: new THREE.Color(0, 0.5, 0),
+        5: new THREE.Color(0.6, 0.4, 0.2),
+    };
+
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            if (oldGrid[i][j] !== newGrid[i][j]) {  // Check for changes
+                const type = newGrid[i][j];
+                const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5);
+                const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
+                meshGrid[i][j].material = material;  // Update only the material
+            }
+        }
+    }
+}
+
