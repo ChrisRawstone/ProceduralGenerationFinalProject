@@ -7,22 +7,46 @@ const globalProcessed = new Set();
 
 export function addBuildings(grid, gridSize, scene) {
     const cellSize = 1;
-    const buildingTexture = new THREE.TextureLoader().load('Textures/building_texture_3.jpg');
-    const buildingMaterial = new THREE.MeshStandardMaterial({ map: buildingTexture });
-    const outlineMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(0, 0, 0), side: THREE.BackSide, transparent: true, opacity: 1 });
+    const textureLoader = new THREE.TextureLoader();
+    const textures = [
+        textureLoader.load('Textures/building_day_texture.jpg'),  // Closer to center
+        textureLoader.load('Textures/texturecan-others-0026-plane-1200.jpg'),  // Midway
+        textureLoader.load('Textures/building_texture_2.jpg')   // Far from center
+    ];
+
+    const outlineMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(1, 1, 1), side: THREE.BackSide });
+    outlineMaterial.transparent = true;
+    outlineMaterial.opacity = 0.5;
+
+    const processed = new Set();
 
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
             const key = `${i},${j}`;
-            if (grid[i][j] === 2 && !globalProcessed.has(key)) {
-                const bounds = getClusterBounds(grid, i, j, globalProcessed, gridSize);
-                const clusterWidth = bounds.maxJ - bounds.minJ + 1;
-                const clusterHeight = bounds.maxI - bounds.minI + 1;
-                const randomHeight = 1 + Math.random() * Math.sqrt(bounds.count) * ((gridSize / 2 - bounds.distanceToCenter) / (gridSize / 2)) * 2;
+            if (grid[i][j] === 2 && !processed.has(key)) {
+                const { minI, maxI, minJ, maxJ, count } = getClusterBounds(grid, i, j, processed, gridSize);
+                const clusterWidth = maxJ - minJ + 1;
+                const clusterHeight = maxI - minI + 1;
+                const clusterCenterX = (minJ + maxJ) / 2;
+                const clusterCenterY = (minI + maxI) / 2;
+                const distanceToCenter = Math.sqrt((clusterCenterX - gridSize / 2) ** 2 + (clusterCenterY - gridSize / 2) ** 2);
+                const proximityScale = (gridSize / 2 - distanceToCenter) / (gridSize / 2);
 
+                // Choose texture based on proximity
+                let textureIndex = 0;
+                if (proximityScale > 0.66) {
+                    textureIndex = 0;
+                } else if (proximityScale > 0.33) {
+                    textureIndex = 1;
+                } else {
+                    textureIndex = 2;
+                }
+
+                const buildingMaterial = new THREE.MeshStandardMaterial({ map: textures[textureIndex] });
+                const randomHeight = 1 + Math.random() * Math.sqrt(count) * proximityScale * 2; 
                 const cubeGeometry = new THREE.BoxGeometry(cellSize * clusterWidth, randomHeight, cellSize * clusterHeight);
-                const building = new THREE.Mesh(cubeGeometry, buildingMaterial.clone()); // Clone material for this instance
-                building.position.set((bounds.clusterCenterX - gridSize / 2) * cellSize, randomHeight / 2, (bounds.clusterCenterY - gridSize / 2) * cellSize);
+                const building = new THREE.Mesh(cubeGeometry, buildingMaterial);
+                building.position.set((clusterCenterX - gridSize / 2) * cellSize, randomHeight / 2, (clusterCenterY - gridSize / 2) * cellSize);
                 building.castShadow = true;
                 building.receiveShadow = true;
                 scene.add(building);
@@ -36,6 +60,7 @@ export function addBuildings(grid, gridSize, scene) {
         }
     }
 }
+
 
 export function getClusterBounds(grid, startI, startJ, processed, gridSize) {
     const queue = [[startI, startJ]];
@@ -168,6 +193,7 @@ export function addSupermarkets(grid, gridSize, scene) {
         for (let j = 0; j < gridSize; j++) {
             if (grid[i][j] === 3) {  // Check if the cell type is for a supermarket
                 const supermarket = new THREE.Mesh(supermarketGeometry, supermarketMaterial);
+                
                 supermarket.position.set(j - 0.5 * gridSize, supermarketHeight / 2, i - 0.5 * gridSize);  // Center the supermarket cube on the cell
                 supermarket.castShadow = true;
                 supermarket.receiveShadow = true;
@@ -216,6 +242,39 @@ const textures = {
 //     }
 //     return scene;
 // }
+
+function shouldRotateTJunction(grid, x, y, gridSize) {
+    // Define road types for quick lookup
+    const roadTypes = new Set([10, 11, 12]);
+
+    // Check directly adjacent cells for roads
+    const directions = [
+        { dx: -1, dy: 0 }, // Left
+        { dx: 1, dy: 0 },  // Right
+        { dx: 0, dy: -1 }, // Up
+        { dx: 0, dy: 1 }   // Down
+    ];
+
+    let missingRoads = directions.filter(dir => {
+        const nx = x + dir.dx;
+        const ny = y + dir.dy;
+        return nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && !roadTypes.has(grid[ny][nx]);
+    });
+
+    // Check for buildings opposite the missing road within 3 blocks radius
+    for (const missing of missingRoads) {
+        for (let i = 1; i <= 3; i++) {
+            const nx = x - missing.dx * i;
+            const ny = y - missing.dy * i;
+            if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && grid[ny][nx] === 2) {
+                return true;  // Rotate if a building is found opposite a missing road
+            }
+        }
+    }
+
+    return false;
+}
+
 
 
 export function addShadows(scene) {
