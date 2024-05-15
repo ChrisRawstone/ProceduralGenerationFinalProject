@@ -88,7 +88,7 @@ placeTrees(grid,gridSize,probability_of_tree);
 // for (let i = 0; i < gridSize; i++) {
 //     console.log(grid[i].join(" "));
 // }
-// var groupedGrid = groupBuildings(grid, gridSize);
+ //var groupedGrid = groupBuildings(grid, gridSize);
 
 // Now pass the grouped grid to detect road junctions and capture the new grid
 var junctionGrid = detectRoadJunctions(grid, gridSize);

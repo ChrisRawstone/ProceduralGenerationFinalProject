@@ -4,31 +4,46 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export function addBuildings(grid, gridSize, scene) {
     const cellSize = 1;
-    // const buildingTexture = new THREE.TextureLoader().load('Textures/building_day_texture.jpg');
-    const buildingTexture = new THREE.TextureLoader().load('Textures/building_day_texture.jpg');
-    const buildingMaterial = new THREE.MeshStandardMaterial({ map: buildingTexture, }); // Blue for buildings
-    const outlineMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(1, 1, 1), side: THREE.BackSide }); // White outline
+    const textureLoader = new THREE.TextureLoader();
+    const textures = [
+        textureLoader.load('Textures/building_day_texture.jpg'),  // Closer to center
+        textureLoader.load('Textures/texturecan-others-0026-plane-1200.jpg'),  // Midway
+        textureLoader.load('Textures/glassbuilding.jpg')   // Far from center
+    ];
+
+    const outlineMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(1, 1, 1), side: THREE.BackSide });
     outlineMaterial.transparent = true;
-    outlineMaterial.opacity = 0.5; // Adjust transparency as needed
-    const processed = new Set(); // To track processed cells
+    outlineMaterial.opacity = 0.5;
+
+    const processed = new Set();
 
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
             const key = `${i},${j}`;
             if (grid[i][j] === 2 && !processed.has(key)) {
-                // Detect entire cluster of contiguous 2's
                 const { minI, maxI, minJ, maxJ, count } = getClusterBounds(grid, i, j, processed, gridSize);
                 const clusterWidth = maxJ - minJ + 1;
                 const clusterHeight = maxI - minI + 1;
                 const clusterCenterX = (minJ + maxJ) / 2;
                 const clusterCenterY = (minI + maxI) / 2;
-                const distanceToCenter = Math.max(Math.abs(clusterCenterY - gridSize / 2), Math.abs(clusterCenterX - gridSize / 2));
-                const proximityScale = (gridSize / 2 - distanceToCenter) / (gridSize / 2); // Scaled 0-1, 1 is closest to center
-                const randomHeight = 1 + Math.random() * Math.sqrt(count) * proximityScale * 2; // Height based on cluster size and center proximity
+                const distanceToCenter = Math.sqrt((clusterCenterX - gridSize / 2) ** 2 + (clusterCenterY - gridSize / 2) ** 2);
+                const proximityScale = (gridSize / 2 - distanceToCenter) / (gridSize / 2);
 
+                // Choose texture based on proximity
+                let textureIndex = 0;
+                if (proximityScale > 0.66) {
+                    textureIndex = 0;
+                } else if (proximityScale > 0.33) {
+                    textureIndex = 1;
+                } else {
+                    textureIndex = 2;
+                }
+
+                const buildingMaterial = new THREE.MeshStandardMaterial({ map: textures[textureIndex] });
+                const randomHeight = 1 + Math.random() * Math.sqrt(count) * proximityScale * 2; 
                 const cubeGeometry = new THREE.BoxGeometry(cellSize * clusterWidth, randomHeight, cellSize * clusterHeight);
                 const building = new THREE.Mesh(cubeGeometry, buildingMaterial);
-                building.position.set((clusterCenterX - gridSize / 2 ) * cellSize, randomHeight / 2, (clusterCenterY - gridSize / 2 ) * cellSize);
+                building.position.set((clusterCenterX - gridSize / 2) * cellSize, randomHeight / 2, (clusterCenterY - gridSize / 2) * cellSize);
                 building.castShadow = true;
                 building.receiveShadow = true;
                 scene.add(building);
@@ -43,6 +58,7 @@ export function addBuildings(grid, gridSize, scene) {
         }
     }
 }
+
 
 export function getClusterBounds(grid, startI, startJ, processed, gridSize) {
     const queue = [[startI, startJ]];
@@ -168,6 +184,7 @@ export function addSupermarkets(grid, gridSize, scene) {
         for (let j = 0; j < gridSize; j++) {
             if (grid[i][j] === 3) {  // Check if the cell type is for a supermarket
                 const supermarket = new THREE.Mesh(supermarketGeometry, supermarketMaterial);
+                
                 supermarket.position.set(j - 0.5 * gridSize, supermarketHeight / 2, i - 0.5 * gridSize);  // Center the supermarket cube on the cell
                 supermarket.castShadow = true;
                 supermarket.receiveShadow = true;
@@ -176,28 +193,39 @@ export function addSupermarkets(grid, gridSize, scene) {
         }
     }
 }
-const textureLoader = new THREE.TextureLoader();
-const textures = {
-    10: textureLoader.load('textures/roadF.jpg'),  // Texture for straight roads
-    11: textureLoader.load('textures/intersection_1.jpg'),  // Texture for intersections
-    12: textureLoader.load('textures/Troad.jpg'),    // Texture for T-junctions
-};
-
 export function createCanvas(grid, gridSize, scene) {
     const cellSize = 1;
     const cellGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
+    const textureLoader = new THREE.TextureLoader();
+
+    // Load textures
+    const textures = {
+        10: textureLoader.load('textures/roadF2.jpg'),  // Texture for straight roads
+        11: textureLoader.load('textures/intersection_1.jpg'),  // Texture for intersections
+        12: textureLoader.load('textures/Troad.jpg'),    // Texture for T-junctions
+    };
 
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
             const type = grid[i][j];
             let material;
 
-            if (textures[type]) { // Check if there is a texture defined for this type
-                material = new THREE.MeshBasicMaterial({ map: textures[type] });
+            if (textures[type]) {
+                material = new THREE.MeshBasicMaterial({ map: textures[type], side: THREE.DoubleSide });
+                if (type === 12) {  // Check if this is a T-junction
+                    // Check for nearby roads and buildings to determine rotation
+                    const rotate = shouldRotateTJunction(grid, i, j, gridSize);
+                    if (rotate) {
+                        material.map.rotation = Math.PI;  // Rotate texture 180 degrees
+                        material.map.needsUpdate = true;
+                    }
+                    material.map.wrapS = THREE.RepeatWrapping;
+                    material.map.wrapT = THREE.RepeatWrapping;
+                }
             } else {
                 // Fallback color if no texture is defined
                 const colors = {
-                    0: new THREE.Color(88/255,45/255,15/255), // Empty space
+                    0: new THREE.Color(88/255, 45/255, 15/255), // Empty space
                     1: new THREE.Color(1, 1, 1), // Road (white)
                     2: new THREE.Color(0, 0, 1),  // Building (blue)
                     3: new THREE.Color(1, 0.5, 0),  // Super Market (orange)
@@ -216,6 +244,39 @@ export function createCanvas(grid, gridSize, scene) {
     }
     return scene;
 }
+
+function shouldRotateTJunction(grid, x, y, gridSize) {
+    // Define road types for quick lookup
+    const roadTypes = new Set([10, 11, 12]);
+
+    // Check directly adjacent cells for roads
+    const directions = [
+        { dx: -1, dy: 0 }, // Left
+        { dx: 1, dy: 0 },  // Right
+        { dx: 0, dy: -1 }, // Up
+        { dx: 0, dy: 1 }   // Down
+    ];
+
+    let missingRoads = directions.filter(dir => {
+        const nx = x + dir.dx;
+        const ny = y + dir.dy;
+        return nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && !roadTypes.has(grid[ny][nx]);
+    });
+
+    // Check for buildings opposite the missing road within 3 blocks radius
+    for (const missing of missingRoads) {
+        for (let i = 1; i <= 3; i++) {
+            const nx = x - missing.dx * i;
+            const ny = y - missing.dy * i;
+            if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize && grid[ny][nx] === 2) {
+                return true;  // Rotate if a building is found opposite a missing road
+            }
+        }
+    }
+
+    return false;
+}
+
 
 
 export function addShadows(scene) {

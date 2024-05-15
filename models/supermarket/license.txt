@@ -1,0 +1,11 @@
+Model Information:
+* title:	Low Polly Supermarket
+* source:	https://sketchfab.com/3d-models/low-polly-supermarket-e4069ce63c1649e3a616112e72445c81
+* author:	My IT studio (https://sketchfab.com/myitstudio)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Low Polly Supermarket" (https://sketchfab.com/3d-models/low-polly-supermarket-e4069ce63c1649e3a616112e72445c81) by My IT studio (https://sketchfab.com/myitstudio) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
