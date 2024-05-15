@@ -176,25 +176,46 @@ export function addSupermarkets(grid, gridSize, scene) {
         }
     }
 }
+const textureLoader = new THREE.TextureLoader();
+const textures = {
+    10: textureLoader.load('textures/roadF.jpg'),  // Texture for straight roads
+    11: textureLoader.load('textures/intersection_1.jpg'),  // Texture for intersections
+    12: textureLoader.load('textures/Troad.jpg'),    // Texture for T-junctions
+};
 
-export function createGround(scene, gridSize, texturePath) {
-    const groundSize = gridSize; // Define the size of the ground
-    const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
-    const loader = new THREE.TextureLoader();
+// export function createCanvas(grid, gridSize, scene) {
+//     const cellSize = 1;
+//     const cellGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
 
-    loader.load(texturePath, function(texture) {
-        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(5, 5); // Adjust these values based on your texture and aesthetic needs
-        const groundMaterial = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
-        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-        ground.rotation.x = -Math.PI / 2;
-        ground.position.set(0, -0.01, 0); // Slightly lower to avoid z-fighting
-        ground.receiveShadow = true;
-        scene.add(ground);
-    });
-}
+//     for (let i = 0; i < gridSize; i++) {
+//         for (let j = 0; j < gridSize; j++) {
+//             const type = grid[i][j];
+//             let material;
 
+//             if (textures[type]) { // Check if there is a texture defined for this type
+//                 material = new THREE.MeshBasicMaterial({ map: textures[type] });
+//             } else {
+//                 // Fallback color if no texture is defined
+//                 const colors = {
+//                     0: new THREE.Color(88/255,45/255,15/255), // Empty space
+//                     1: new THREE.Color(1, 1, 1), // Road (white)
+//                     2: new THREE.Color(0, 0, 1),  // Building (blue)
+//                     3: new THREE.Color(1, 0.5, 0),  // Super Market (orange)
+//                     4: new THREE.Color(0, 0.5, 0), // Trees (Dark green)
+//                     5: new THREE.Color(0.6, 0.4, 0.2), // Brown
+//                 };
+//                 const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5);
+//                 material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
+//             }
 
+//             const cell = new THREE.Mesh(cellGeometry, material);
+//             cell.rotation.x = -Math.PI / 2;
+//             cell.position.set(j - 0.5 * gridSize, 0, i - 0.5 * gridSize);
+//             scene.add(cell);
+//         }
+//     }
+//     return scene;
+// }
 
 
 export function addShadows(scene) {
@@ -242,6 +263,13 @@ export function createCanvas(grid, gridSize, scene) {
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
             const type = grid[i][j];
+            let material;
+
+            if (textures[type]) { // Check if there is a texture defined for this type
+                material = new THREE.MeshBasicMaterial({ map: textures[type] });
+            } else {
+
+            const type = grid[i][j];
             const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5);
             // if (type === 1) continue;
             const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
@@ -252,6 +280,7 @@ export function createCanvas(grid, gridSize, scene) {
             cell.receiveShadow = true;
             scene.add(cell);
             meshGrid[i][j] = cell;
+            }
         }
     }
     return { scene, meshGrid };  // Return both scene and meshGrid

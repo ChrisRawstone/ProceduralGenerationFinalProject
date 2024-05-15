@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from './build/controls/OrbitControls.js';
-import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets} from './grid.js';
+import { init_grid, initialize_starting_road, populateGridWithRoadsRecursively, placeBuildings, placeTrees, placeSupermarkets,detectRoadJunctions, groupBuildings} from './grid.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import {addTrees, addSupermarkets, addBuildings, preloadTrees,addShadows,createGround, createCanvas, updateCanvas} from './objects.js';
+import {addTrees, addSupermarkets, addBuildings, preloadTrees,addShadows, createCanvas, updateCanvas} from './objects.js';
 import {checkForLines} from './interactive_controls.js';
 
 console.log("hey");
@@ -16,6 +16,13 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 renderer.setClearColor(new THREE.Color(0x87CEEB)); // Light blue background
+
+//Tone Mapping for HDR
+renderer.toneMapping= THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=0.6;
+renderer.outputEncoding=THREE.sRGBEncoding;
+
+
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; // Smoothly damping effect during rotation
@@ -69,13 +76,13 @@ controls.enabled = controlsEnabled;
 
 grid = init_grid(gridSize);
 // Initialize the grid
-var {scene, meshGrid} = createCanvas(grid, gridSize, scene);
 
 
 
+var junctionGrid = detectRoadJunctions(grid, gridSize);
 
 
-
+var {scene, meshGrid} = createCanvas(junctionGrid, gridSize, scene);
 
 function toggleControls() {
     controls.enabled = !controls.enabled;
@@ -138,12 +145,14 @@ function handleCanvasInteraction(event) {
             // Example usage within your handleCanvasInteraction
             if (lineInfo) {
 
-                const oldGrid = grid.map(row => row.slice());  // Create a shallow copy of the grid for comparison
+                var junctionoldGrid = detectRoadJunctions(grid, gridSize);
+                var junctionGrid = detectRoadJunctions(grid, gridSize);
+                const oldGrid = junctionoldGrid.map(row => row.slice());  // Create a shallow copy of the grid for comparison
                 // populateGridWithRoadsRecursively(grid, lineInfo.endX, lineInfo.endY, lineInfo.startX, lineInfo.startY, 1, gridSize, 5, 0.5, 10);
                 populateGridWithRoadsRecursively(grid, lineInfo.endX, lineInfo.endY, lineInfo.startX, lineInfo.startY, iterations_of_Lsystem, gridSize, line_segment_size, weight_bias, bias_half_life);
 
                 
-                updateCanvas(oldGrid, grid, meshGrid, gridSize);  // Update the canvas with new grid data
+                updateCanvas(oldGrid, junctionGrid, meshGrid, gridSize);  // Update the canvas with new grid data
 
 
 
