@@ -45,7 +45,7 @@ scene.background = skyboxTexture;
 var grid;
 var x_prev, y_prev;
 
-var gridSize = 10; // this determines the map size
+var gridSize = 100; // this determines the map size
 var line_segment_size = 20; // this will make longer roads if it is higher
 var iterations_of_Lsystem = 5; // the higher this value is the more roads will be generated
 var weight_bias = 100; // the higher this value is the symmetric the roads will be. This can be anywhere from 0 to 10000
