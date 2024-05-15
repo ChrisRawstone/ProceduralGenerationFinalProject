@@ -299,11 +299,18 @@ export function updateCanvas(oldGrid, newGrid, meshGrid, gridSize) {
 
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
+            const type = newGrid[i][j];
+            let material;
             if (oldGrid[i][j] !== newGrid[i][j]) {  // Check for changes
-                const type = newGrid[i][j];
-                const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5);
-                const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
-                meshGrid[i][j].material = material;  // Update only the material
+                if (textures[type]) { // Check if there is a texture defined for this type
+                    material = new THREE.MeshBasicMaterial({ map: textures[type] });
+                    meshGrid[i][j].material = material;
+                } else {
+                    const type = newGrid[i][j];
+                    const color = colors[type] || new THREE.Color(0.5, 0.5, 0.5);
+                    const material = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
+                    meshGrid[i][j].material = material;  // Update only the material'
+                }
             }
         }
     }

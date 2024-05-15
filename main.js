@@ -146,14 +146,14 @@ function handleCanvasInteraction(event) {
             if (lineInfo) {
 
                 var junctionoldGrid = detectRoadJunctions(grid, gridSize);
-                var junctionGrid = detectRoadJunctions(grid, gridSize);
-                const oldGrid = junctionoldGrid.map(row => row.slice());  // Create a shallow copy of the grid for comparison
+                
+                const oldGrid = grid.map(row => row.slice());  // Create a shallow copy of the grid for comparison
                 // populateGridWithRoadsRecursively(grid, lineInfo.endX, lineInfo.endY, lineInfo.startX, lineInfo.startY, 1, gridSize, 5, 0.5, 10);
                 populateGridWithRoadsRecursively(grid, lineInfo.endX, lineInfo.endY, lineInfo.startX, lineInfo.startY, iterations_of_Lsystem, gridSize, line_segment_size, weight_bias, bias_half_life);
 
-                
-                updateCanvas(oldGrid, junctionGrid, meshGrid, gridSize);  // Update the canvas with new grid data
+                var junctionGrid = detectRoadJunctions(grid, gridSize);
 
+                updateCanvas(oldGrid, junctionGrid, meshGrid, gridSize);  // Update the canvas with new grid data
 
 
                 placeSupermarkets(grid,gridSize, probability_of_supermarket);
