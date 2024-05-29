@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { loadModel } from './Importing_gltf.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+
+
 const globalProcessed = new Set();
 
 export function addBuildings(grid, gridSize, scene) {
