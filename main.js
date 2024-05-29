@@ -38,13 +38,13 @@ scene.add(ambientLight);
 // this is adding shadows to the scene . you can turn off by commenting out this line
 addShadows(scene);
 
-const cubeTextureLoader = new THREE.CubeTextureLoader();
-cubeTextureLoader.setPath('Textures/skybox/');   
-const skyboxTexture = cubeTextureLoader.load([
-    'right.jpg', 'left.jpg', 'top.jpg',
-    'bottom.jpg', 'front.jpg', 'back.jpg'
-]);
-scene.background = skyboxTexture;
+// const cubeTextureLoader = new THREE.CubeTextureLoader();
+// cubeTextureLoader.setPath('Textures/skybox/');   
+// const skyboxTexture = cubeTextureLoader.load([
+//     'right.jpg', 'left.jpg', 'top.jpg',
+//     'bottom.jpg', 'front.jpg', 'back.jpg'
+// ]);
+// scene.background = skyboxTexture;
 
 
 

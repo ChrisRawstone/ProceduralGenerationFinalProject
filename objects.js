@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { loadModel } from './Importing_gltf.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// Define a global processed set
 const globalProcessed = new Set();
 
 export function addBuildings(grid, gridSize, scene) {
@@ -12,6 +11,13 @@ export function addBuildings(grid, gridSize, scene) {
         textureLoader.load('Textures/building_day_texture.jpg'),  // Closer to center
         textureLoader.load('Textures/texturecan-others-0026-plane-1200.jpg'),  // Midway
         textureLoader.load('Textures/building_texture_2.jpg')   // Far from center
+    ];
+
+    // Array of roof textures
+    const roofTextures = [
+        textureLoader.load('Textures/helipad.jpeg'),
+        textureLoader.load('Textures/glassroof.jpg'),
+        textureLoader.load('Textures/roof.jpeg')
     ];
 
     const outlineMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(1, 1, 1), side: THREE.BackSide });
@@ -51,6 +57,17 @@ export function addBuildings(grid, gridSize, scene) {
                 building.receiveShadow = true;
                 scene.add(building);
 
+                // Add roof with different dimensions and random texture
+                const roofHeight = randomHeight * 0.2;  // Example: roof height is 20% of building height
+                const roofTextureIndex = Math.floor(Math.random() * roofTextures.length);  // Randomly choose a roof texture
+                const roofGeometry = new THREE.BoxGeometry(cellSize * clusterWidth * 1.1, roofHeight, cellSize * clusterHeight * 1.1);
+                const roofMaterial = new THREE.MeshStandardMaterial({ map: roofTextures[roofTextureIndex] });
+                const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+                roof.position.set(building.position.x, building.position.y + randomHeight / 2 + roofHeight / 2, building.position.z);
+                roof.castShadow = true;
+                roof.receiveShadow = true;
+                scene.add(roof);
+
                 // Add outline with slightly larger geometry
                 const outlineGeometry = new THREE.BoxGeometry(cellSize * clusterWidth * 1.05, randomHeight * 1.05, cellSize * clusterHeight * 1.05);
                 const outlineMesh = new THREE.Mesh(outlineGeometry, outlineMaterial.clone()); // Clone material for outline
@@ -60,7 +77,6 @@ export function addBuildings(grid, gridSize, scene) {
         }
     }
 }
-
 
 export function getClusterBounds(grid, startI, startJ, processed, gridSize) {
     const queue = [[startI, startJ]];
@@ -93,7 +109,6 @@ export function getClusterBounds(grid, startI, startJ, processed, gridSize) {
 
 
 
-
 const trees = [
     'tree1',
     'tree2',
@@ -115,7 +130,6 @@ export function preloadTrees(scene, callback) {
     }
 
     function loadModel(path, callback) {
-        // const loader = new THREE.GLTFLoader(); // Assuming you're using GLTF format
         var loader = new GLTFLoader();
         loader.load(
             path,
@@ -123,10 +137,9 @@ export function preloadTrees(scene, callback) {
                 const model = gltf.scene;
                 model.traverse((node) => {
                     if (node.isMesh) {
-                        node.castShadow = true;
-                        node.receiveShadow = true;
+                        node.castShadow = true;  // Enable shadow casting for the tree model
+                        node.receiveShadow = true;  // Enable shadow receiving for the tree model
                     }
-                    
                 });
                 preloadedTrees[path] = model;
                 callback();
@@ -148,7 +161,7 @@ function getRandomTreeIndex() {
     return Math.floor(Math.random() * trees.length);
 }
 
-export function addTrees(grid, gridSize, scene,scale_of_tree) {
+export function addTrees(grid, gridSize, scene, scale_of_tree) {
     const cellSize = 1;
     const treeHeight = 2; // Fixed height for all trees for simplicity
     const treeRadius = 0.2; // Radius of the tree's trunk
@@ -159,11 +172,10 @@ export function addTrees(grid, gridSize, scene,scale_of_tree) {
         for (let j = 0; j < gridSize; j++) {
             if (grid[i][j] === 4) {  // Check if the cell type is for a tree
                 const treeIndex = getRandomTreeIndex();
-                // const treePath = trees[treeIndex];
                 const originalModel = preloadedTrees[`models/${trees[3]}/scene.gltf`];
                 if (originalModel) {
                     const newTree = originalModel.clone(); // Clone the preloaded tree model
-                    newTree.position.set(j - 0.5 * gridSize, (treeHeight / 2)-1, i - 0.5 * gridSize);
+                    newTree.position.set(j - 0.5 * gridSize, (treeHeight / 2) - 1, i - 0.5 * gridSize);
                     newTree.scale.set(scale_of_tree, scale_of_tree, scale_of_tree); // Scale if needed
                     newTree.castShadow = true;
                     newTree.receiveShadow = true;
@@ -173,15 +185,15 @@ export function addTrees(grid, gridSize, scene,scale_of_tree) {
                     // Fallback to a cylinder if the model is not loaded
                     const fallbackTree = new THREE.Mesh(treeGeometry, treeMaterial);
                     fallbackTree.position.set(j - 0.5 * gridSize, treeHeight / 2, i - 0.5 * gridSize);
-                    // fallbackTree.scale.set(scale_of_tree, scale_of_tree, scale_of_tree);
                     fallbackTree.userData.type = 'tree';
+                    fallbackTree.castShadow = true;
+                    fallbackTree.receiveShadow = true;
                     scene.add(fallbackTree);
                 }
             }
         }
     }
-}
-
+}   
 
 export function addSupermarkets(grid, gridSize, scene) {
     const cellSize = 1;
@@ -189,15 +201,30 @@ export function addSupermarkets(grid, gridSize, scene) {
     const supermarketGeometry = new THREE.BoxGeometry(cellSize, supermarketHeight, cellSize); // Create a cube for supermarkets
     const supermarketMaterial = new THREE.MeshStandardMaterial({ color: new THREE.Color(1, 0.5, 0) }); // Orange color for supermarkets
 
+    // Load texture for the small cube
+    const textureLoader = new THREE.TextureLoader();
+    const cubeTexture = textureLoader.load('Textures/fan.jpeg'); // Replace with your texture file path
+
+    // Define smaller cube properties
+    const cubeSize = cellSize * 0.5; // Size of the smaller cube
+    const smallCubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize); // Create a smaller cube geometry
+    const smallCubeMaterial = new THREE.MeshStandardMaterial({ map: cubeTexture }); // Apply the texture to the cube material
+
     for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
             if (grid[i][j] === 3) {  // Check if the cell type is for a supermarket
                 const supermarket = new THREE.Mesh(supermarketGeometry, supermarketMaterial);
-                
                 supermarket.position.set(j - 0.5 * gridSize, supermarketHeight / 2, i - 0.5 * gridSize);  // Center the supermarket cube on the cell
                 supermarket.castShadow = true;
                 supermarket.receiveShadow = true;
                 scene.add(supermarket);
+
+                // Add a smaller cube on top of the supermarket
+                const smallCube = new THREE.Mesh(smallCubeGeometry, smallCubeMaterial);
+                smallCube.position.set(supermarket.position.x, supermarket.position.y + supermarketHeight / 2 + cubeSize / 2, supermarket.position.z);
+                smallCube.castShadow = true;
+                smallCube.receiveShadow = true;
+                scene.add(smallCube);
             }
         }
     }
