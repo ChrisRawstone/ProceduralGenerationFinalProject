@@ -3,7 +3,6 @@ import { loadModel } from './Importing_gltf.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 
-
 const globalProcessed = new Set();
 
 export function addBuildings(grid, gridSize, scene) {
@@ -62,7 +61,7 @@ export function addBuildings(grid, gridSize, scene) {
                 // Add roof with different dimensions and random texture
                 const roofHeight = randomHeight * 0.2;  // Example: roof height is 20% of building height
                 const roofTextureIndex = Math.floor(Math.random() * roofTextures.length);  // Randomly choose a roof texture
-                const roofGeometry = new THREE.BoxGeometry(cellSize * clusterWidth * 1.1, roofHeight, cellSize * clusterHeight * 1.1);
+                const roofGeometry = new THREE.BoxGeometry(cellSize * clusterWidth, roofHeight, cellSize * clusterHeight);
                 const roofMaterial = new THREE.MeshStandardMaterial({ map: roofTextures[roofTextureIndex] });
                 const roof = new THREE.Mesh(roofGeometry, roofMaterial);
                 roof.position.set(building.position.x, building.position.y + randomHeight / 2 + roofHeight / 2, building.position.z);
